@@ -101,7 +101,8 @@
                             <h4 class="text-gray-700 text-lg font-bold leading-[25.20px]">Today</h4>
                         </div>
                         <div class="flex gap-1 p-2">
-                            <p class="text-[10px] font-normal leading-[14px]"><span id="comlTodos"></span>/<span id="allTodos"> </span> Task Completed</p>
+                            <p class="text-[10px] font-normal leading-[14px]"><span id="comlTodos"></span>/<span
+                                    id="allTodos"> </span> Task Completed</p>
                             <img src="img/Content/CkCheck.svg" alt="">
                         </div>
                     </div>
@@ -134,7 +135,7 @@
                     <div class="flex flex-col p-1">
                         <!-- Todo List -->
                         <div id="todos-container" class="flex flex-col gap-3 pb-2">
-                            
+
                         </div>
                         <!-- Add task button -->
                         <div id="AddTask-btn" class="flex justify-start items-center gap-2 p-2 cursor-pointer group">
@@ -146,7 +147,7 @@
                             </div>
                         </div>
                         <!-- Form add task -->
-                        <form class="hidden border border-gray-200 p-3 rounded-[10px]" action="">
+                        <form id="addTaskForm" class="hidden border border-gray-200 p-3 rounded-[10px]" action="">
                             <div class="flex flex-col gap-3 pb-3">
                                 <div>
                                     <input class="w-full text-xs font-bold leading-none p-2" type="text"
@@ -218,91 +219,202 @@
                     </div>
                 </div>
                 <!-- Modal Edit -->
-                <div id="editModal" data-todo-stt="" class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center">
-                    <div class="bg-white p-6 rounded-lg">
-                        <div class="flex flex-col gap-3 pb-3">
+                <div id="editModal" data-todo-stt=""
+                    class=" fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center">
+                    <div class="lg:w-[864px] lg:h-[813px] bg-white flex flex-col rounded-lg">
+                        <div class="w-full flex justify-between items-center pl-6 pr-1 py-4">
                             <div>
-                                <input class="w-full text-xs font-bold leading-none p-2" type="text"
-                                    placeholder="Task name">
+                                <p id="todoname" class="text-lg font-bold font-['Inter'] leading-7">Inbox</p>
                             </div>
-                            <div>
-                                <input class="w-full text-xs font-normal leading-none p-2" type="text"
-                                    placeholder="Description">
+                            <div class="flex gap-4">
+                                <img class="cursor-pointer" src="img/Content/MdDelete.svg" alt="">
+                                <div id="close-edit"
+                                    class="flex justify-center items-center px-2 py-2 cursor-pointer hover:bg-gray-200 active:bg-gray-100">
+                                    X</div>
                             </div>
-                            <div class="w-full flex gap-3">
-                                <div class="flex border border-gray-300 rounded-lg p-2 gap-1">
-                                    <input type="date" id="datepicker"
-                                        class=" text-green-500 text-xs font-light leading-[18px]">
-                                </div>
-                                <div class="relative inline-block text-xs font-light leading-[18px]">
-                                    <div data-priority=""
-                                        class="selected-priority cursor-pointer flex gap-1 border border-gray-300 px-4 py-2  rounded-md">
-                                        <img src="img/Content/BsFlag.svg" alt="">
-                                        Priority
+                        </div>
+                        <hr>
+                        <div class="w-full h-full flex pl-4">
+                            <div class="w-full flex flex-col pr-2 py-4">
+                                <div class="w-full flex gap-2">
+                                    <div id="mainchecked-edit"
+                                        class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full">
+                                        <i class="fa-solid fa-check text-white"></i>
                                     </div>
-                                    <ul
-                                        class="priority-options absolute mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg hidden">
-                                        <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                            data-priority="1">
-                                            <img src="img/Content/BsFlagRed.svg" alt="">
-                                            P1
-                                        </li>
-                                        <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                            data-priority="2">
-                                            <img src="img/Content/BsFlagOrange.svg" alt="">
-                                            P2
-                                        </li>
-                                        <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                            data-priority="3">
-                                            <img src="img/Content/BsFlagBlue.svg" alt="">
-                                            P3
-                                        </li>
-                                        <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                            data-priority="4">
-                                            <img src="img/Content/BsFlagGreen.svg" alt="">
-                                            P4
-                                        </li>
-                                    </ul>
+                                    <div class="w-full flex flex-col gap-3 pb-3">
+                                        <div class="w-full">
+                                            <input class="w-full text-xs font-bold leading-none p-2" type="text"
+                                                placeholder="Task name">
+                                        </div>
+                                        <div class="w-full">
+                                            <input class="w-full text-xs font-normal leading-none p-2" type="text"
+                                                placeholder="Description">
+                                        </div>
+                                    </div>
                                 </div>
+                                <hr>
+                                <div id="subtaskedit" class="py-2">
+                                    <!-- <div class="flex justify-center items-center gap-3 pl-4 pr-4">
+                                        <input class="w-full text-xs font-normal leading-none p-2" type="text"
+                                            placeholder="Subtask">
+                                    </div> -->
+                                </div>
+                                <div id="subtaskadd">
+                                    <!-- New subtasks -->
+                                </div>
+                                <!-- Add subtask button -->
+                                <div id="AddSubTask-btn"
+                                    class="flex justify-start items-center gap-2 p-2 cursor-pointer group">
+                                    <i
+                                        class="fa-regular fa-plus text-teal-300 bg-transparent group-hover:bg-teal-300 group-hover:text-white group-active:bg-teal-400 w-5 h-5 flex items-center justify-center rounded-full"></i>
+                                    <div
+                                        class="text-gray-400 text-xs font-light leading-[18px] group-hover:text-teal-300 group-active:text-teal-400">
+                                        Add subtask
+                                    </div>
+                                </div>
+                                <!-- Add subtask form -->
+                                <!-- <div  class=" flex justify-center items-center gap-1">
+                                    <div
+                                        class="flex justify-center items-center gap-3 border-2 border-gray-400 m-1 rounded-lg">
+                                        <input  class="w-full text-xs font-normal leading-none p-2"
+                                            type="text" placeholder="Subtask">
+                                    </div>
+                                    <div class="group">
+                                        <i
+                                            class="fa-solid fa-minus text-red-600 bg-transparent group-hover:bg-red-500 group-hover:text-white group-active:bg-red-700 w-5 h-5 flex items-center justify-center rounded-full"></i>
+                                    </div>
+                                    <div  class="group">
+                                        <i
+                                            class="fa-regular fa-plus text-teal-300 bg-transparent group-hover:bg-teal-300 group-hover:text-white group-active:bg-teal-400 w-5 h-5 flex items-center justify-center rounded-full"></i>
+                                    </div>
+                                </div> -->
+                                <!-- Form add subtask -->
+                                <form id="AddsubtaskForm" class="hidden border border-gray-200 p-3 rounded-[10px]"
+                                    action="">
+                                    <div class="flex flex-col gap-3 pb-3">
+                                        <div>
+                                            <input id="subtaskInput" class="w-full text-xs font-bold leading-none p-2" type="text"
+                                                placeholder="Subtask name">
+                                        </div>
+                                        <div>
+                                            <input class="w-full text-xs font-normal leading-none p-2" type="text"
+                                                placeholder="Description">
+                                        </div>
+                                        <div class="w-full flex gap-3">
+                                            <div class="flex border border-gray-300 rounded-lg p-2 gap-1">
+                                                <input type="date" id="" class=" text-green-500 text-xs font-light leading-[18px]">
+                                            </div>
+                                            <div class="relative inline-block text-xs font-light leading-[18px]">
+                                                <div data-priority=""
+                                                    class="selected-priority cursor-pointer flex gap-1 border border-gray-300 px-4 py-2  rounded-md">
+                                                    <img src="img/Content/BsFlag.svg" alt="">
+                                                    Priority
+                                                </div>
+                                                <ul
+                                                    class="priority-options absolute mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg hidden">
+                                                    <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                        data-priority="1">
+                                                        <img src="img/Content/BsFlagRed.svg" alt="">
+                                                        Priority
+                                                    </li>
+                                                    <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                        data-priority="2">
+                                                        <img src="img/Content/BsFlagOrange.svg" alt="">
+                                                        Priority
+                                                    </li>
+                                                    <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                        data-priority="3">
+                                                        <img src="img/Content/BsFlagBlue.svg" alt="">
+                                                        Priority
+                                                    </li>
+                                                    <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                        data-priority="4">
+                                                        <img src="img/Content/BsFlagGreen.svg" alt="">
+                                                        Priority
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="w-full flex justify-end gap-3 pt-3">
+                                        <button id="CancelAddSup"
+                                            class="bg-slate-400 hover:bg-slate-300 active:bg-slate-500 p-2 pl-4 pr-4 rounded-lg text-center text-white text-[10px] font-bold leading-[15px]">Cancel</button>
+                                        <button id="SaveAddSup"
+                                            class="bg-teal-300 hover:bg-teal-200 active:bg-teal-400 p-2 pl-4 pr-4 rounded-lg text-center text-white text-[10px] font-bold leading-[15px]">
+                                            Add task</button>
+                                    </div>
+                                </form>
                             </div>
-                        </div>
-                        <div id="subtaskedit">
-                            <div class="flex justify-center items-center gap-3 pl-4 pr-4">
-                                <i class="fa-regular fa-circle-dot text-gray-500"></i>
-                                <input class="w-full text-xs font-normal leading-none p-2" type="text"
-                                    placeholder="Subtask">
-                            </div>
-                        </div>
-                        <div id="subtaskadd">
-                            <!-- New subtasks -->
-                        </div>
-                        <!-- Add subtask button -->
-                        <div id="AddSubTask-btn" class="flex justify-start items-center gap-2 p-2 cursor-pointer group">
-                            <i
-                                class="fa-regular fa-plus text-teal-300 bg-transparent group-hover:bg-teal-300 group-hover:text-white group-active:bg-teal-400 w-5 h-5 flex items-center justify-center rounded-full"></i>
-                            <div
-                                class="text-gray-400 text-xs font-light leading-[18px] group-hover:text-teal-300 group-active:text-teal-400">
-                                Add subtask
-                            </div>
-                        </div>
-                        <!-- Add subtask form -->
-                        <div id="AddsubtaskForm" class="hidden flex justify-center items-center gap-1">
-                            <div class="flex justify-center items-center gap-3 border-2 border-gray-400 m-1 rounded-lg">
-                                <input id="subtaskInput" class="w-full text-xs font-normal leading-none p-2" type="text"
-                                    placeholder="Subtask">
-                            </div>
-                            <div id="CancelAddSup" class="group">
-                                <i
-                                    class="fa-solid fa-minus text-red-600 bg-transparent group-hover:bg-red-500 group-hover:text-white group-active:bg-red-700 w-5 h-5 flex items-center justify-center rounded-full"></i>
-                            </div>
-                            <div id="SaveAddSup" class="group">
-                                <i
-                                    class="fa-regular fa-plus text-teal-300 bg-transparent group-hover:bg-teal-300 group-hover:text-white group-active:bg-teal-400 w-5 h-5 flex items-center justify-center rounded-full"></i>
+                            <div class="w-5/12 bg-gray-100 py-1">
+                                <div class="w-full flex flex-col gap-4 p-4">
+                                    <!-- Project -->
+                                    <div class="flex flex-col gap-3">
+                                        <p class="text-xs font-bold font-['Roboto'] leading-normal">Project</p>
+                                        <div class="flex gap-1 pl-2">
+                                            <img src="img/Content/Inbox.svg" alt="">
+                                            <p class="text-xs font-normal font-['Inter'] leading-normal">Inbox</p>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <!-- Date -->
+                                    <!-- <div class="w-full flex rounded-lg gap-1">
+                                        <input type="date" id="datepicker"
+                                            class="w-full bg-gray-100 text-green-500 text-xs font-light leading-[18px] px-2 py-1">
+                                    </div> -->
+                                    <div class="flex flex-col gap-3">
+                                        <p class="text-xs font-bold font-['Roboto'] leading-normal">Due date</p>
+                                        <div class="relative w-full">
+                                            <input type="text" id="datepicker-edit"
+                                                class="w-full bg-gray-100 text-green-500 text-xs font-normal leading-normal pl-7 py-2 hover:bg-gray-200 active:bg-gray-300 cursor-pointer"
+                                                placeholder="Select date" onfocus="(this.type='date')"
+                                                onblur="(this.type='text')">
+                                            <i
+                                                class="fa-regular fa-calendar absolute left-2 top-1/2 transform -translate-y-1/2"></i>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <!-- Priority -->
+                                    <div id="priority-edit" class="flex flex-col gap-3">
+                                        <p class="text-xs font-bold font-['Roboto'] leading-normal">Priority</p>
+                                        <div class="relative inline-block text-xs font-light leading-[18px]">
+                                            <div data-priority=""
+                                                class="selected-priority cursor-pointer flex justify-start gap-1 pl-2 py-2 rounded-md hover:bg-gray-200 active:bg-gray-300">
+                                                <img src="img/Content/BsFlag.svg" alt="">
+                                                Priority
+                                            </div>
+                                            <ul
+                                                class="priority-options absolute mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg hidden">
+                                                <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                    data-priority="1">
+                                                    <img src="img/Content/BsFlagRed.svg" alt="">
+                                                    P1
+                                                </li>
+                                                <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                    data-priority="2">
+                                                    <img src="img/Content/BsFlagOrange.svg" alt="">
+                                                    P2
+                                                </li>
+                                                <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                    data-priority="3">
+                                                    <img src="img/Content/BsFlagBlue.svg" alt="">
+                                                    P3
+                                                </li>
+                                                <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                    data-priority="4">
+                                                    <img src="img/Content/BsFlagGreen.svg" alt="">
+                                                    P4
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                </div>
                             </div>
                         </div>
                         <hr>
                         <!-- Button subtask form -->
-                        <div class="w-full flex justify-around gap-3 pt-3">
+                        <div class="w-full flex justify-around gap-3 py-4">
                             <button id="CancelEdit-btn"
                                 class="bg-slate-400 hover:bg-slate-300 active:bg-slate-500 p-2 pl-4 pr-4 rounded-lg text-center text-white text-[10px] font-bold leading-[15px]">Cancel</button>
                             <button id="SaveEdit-btn"

@@ -298,18 +298,27 @@ function populateEditModal(todoStt) {
 
     modal.setAttribute('data-todo-stt', todoStt);
 
+    document.getElementById('todoname').textContent = todo.name;
+
     // Cập nhật các trường nhập liệu
     inputs[0].value = todo.name;
-    inputs[0].className += ` ${todo.checked ? 'line-through' : ''}`;
     inputs[1].value = todo.description;
-    inputs[2].value = todo.dueDate;
+    document.getElementById('datepicker-edit').value = todo.dueDate;
+
+    if (todo.checked) {
+        document.getElementById('mainchecked-edit').classList.add('bg-teal-300');
+    } else {
+        document.getElementById('mainchecked-edit').classList.remove('bg-teal-300');
+    }
 
     // Cập nhật Priority
-    const priorityOptions = modal.querySelectorAll('.priority-options li');
+    const priorityEdit = document.getElementById('priority-edit');
+    const priorityEditElement = priorityEdit.querySelector('.selected-priority');
+    const priorityOptions = priorityEdit.querySelectorAll('.priority-options li');
     priorityOptions.forEach(option => {
         if (option.getAttribute('data-priority') == todo.priority) {
-            priorityElement.innerHTML = option.innerHTML;
-            priorityElement.setAttribute('data-priority', todo.priority);
+            priorityEditElement.innerHTML = option.innerHTML;
+            priorityEditElement.setAttribute('data-priority', todo.priority);
         }
     });
 
@@ -325,7 +334,7 @@ function populateEditModal(todoStt) {
             <div id="" data-checked="${subtask.checked}" class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full ${subtask.checked ? 'bg-teal-300' : ''}">
                 <i class="fa-solid fa-check text-white"></i>
             </div>
-            <input class="w-full text-xs font-normal leading-none p-2 ${subtask.checked ? 'line-through' : ''}" type="text" value="${subtask.name}">
+            <input class="w-full text-xs font-normal leading-none p-2" type="text" value="${subtask.name}">
         `;
         subtaskEditContainer.appendChild(subtaskDiv);
     });
@@ -433,10 +442,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Cấu hình priority cho form thêm
-    setupPrioritySelection(document.querySelector('form'));
+    setupPrioritySelection(document.getElementById('addTaskForm'));
 
     // Cấu hình priority cho modal chỉnh sửa
-    setupPrioritySelection(document.getElementById('editModal'));
+    setupPrioritySelection(document.getElementById('AddsubtaskForm'));
+
+    setupPrioritySelection(document.getElementById('priority-edit'));
 });
 
 
@@ -471,7 +482,7 @@ document.addEventListener('click', function (event) {
 
 // Add task
 document.getElementById('AddTask-btn').addEventListener('click', () => {
-    const form = document.querySelector('form');
+    const form = document.getElementById('addTaskForm');
     const addTaskBtn = document.getElementById('AddTask-btn');
 
     form.classList.remove('hidden');  // Hiển thị form
@@ -480,7 +491,7 @@ document.getElementById('AddTask-btn').addEventListener('click', () => {
 
 document.getElementById('Cancel-btn').addEventListener('click', (event) => {
     event.preventDefault(); // Ngăn chặn hành động mặc định của nút
-    const form = document.querySelector('form');
+    const form = document.getElementById('addTaskForm');
     const addTaskBtn = document.getElementById('AddTask-btn');
 
     form.classList.add('hidden');
@@ -488,7 +499,7 @@ document.getElementById('Cancel-btn').addEventListener('click', (event) => {
 });
 
 // Thêm một todo
-document.querySelector('form').addEventListener('submit', function (event) {
+document.getElementById('addTaskForm').addEventListener('submit', function (event) {
     event.preventDefault(); // Ngăn chặn hành vi mặc định của form
 
     // Lấy dữ liệu từ các trường nhập liệu
@@ -546,7 +557,8 @@ document.getElementById('AddSubTask-btn').addEventListener('click', () => {
 });
 
 // Thêm sự kiện click cho nút SaveAddSup
-document.getElementById('SaveAddSup').addEventListener('click', () => {
+document.getElementById('SaveAddSup').addEventListener('click', (event) => {
+    event.preventDefault();
     const inputField = document.getElementById('subtaskInput');
     const subtaskName = document.getElementById('subtaskInput').value.trim();
     const addSubForm = document.getElementById('AddsubtaskForm');
@@ -585,7 +597,8 @@ document.getElementById('SaveAddSup').addEventListener('click', () => {
 });
 
 // Cancel subtask
-document.getElementById('CancelAddSup').addEventListener('click', () => {
+document.getElementById('CancelAddSup').addEventListener('click', (event) => {
+    event.preventDefault();
     const addSubForm = document.getElementById('AddsubtaskForm');
     const addSubBtn = document.getElementById('AddSubTask-btn');
     const subtaskInput = addSubForm.querySelector('input[type="text"]');
@@ -597,6 +610,12 @@ document.getElementById('CancelAddSup').addEventListener('click', () => {
 
 // Hủy edit
 document.getElementById('CancelEdit-btn').addEventListener('click', (event) => {
+    event.preventDefault();
+    document.getElementById('editModal').classList.add('hidden');
+    subtaskitems = [];
+});
+
+document.getElementById('close-edit').addEventListener('click', (event) => {
     event.preventDefault();
     document.getElementById('editModal').classList.add('hidden');
     subtaskitems = [];
@@ -624,7 +643,7 @@ document.getElementById('SaveEdit-btn').addEventListener('click', function() {
         ...todos[todoIndex],
         name: inputs[0].value,
         description: inputs[1].value,
-        dueDate: inputs[2].value,
+        dueDate: document.getElementById('datepicker-edit').value,
         priority: priority,
         subtasks: [] // Khởi tạo danh sách subtasks mới
     };
