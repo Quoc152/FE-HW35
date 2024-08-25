@@ -33,6 +33,7 @@ let todos = [
 
 let checkedItems = [];
 let subtaskitems = [];
+let selectedEdit = null ;
 
 // Lưu dữ liệu todos vào LocalStorage
 saveToLocalStorage = (todos) => {
@@ -329,14 +330,59 @@ function populateEditModal(todoStt) {
 
     todo.subtasks.forEach(subtask => {
         const subtaskDiv = document.createElement('div');
-        subtaskDiv.className = 'flex justify-center items-center gap-3 pl-4 pr-4';
+        subtaskDiv.className = 'flex justify-between gap-3 pl-4 pr-4 border-b-2 border-gray-200 mb-2';
         subtaskDiv.innerHTML = `
-            <div id="" data-checked="${subtask.checked}" class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full ${subtask.checked ? 'bg-teal-300' : ''}">
-                <i class="fa-solid fa-check text-white"></i>
+            <div class="flex gap-3 pb-2">
+                <div id="" data-checked="${subtask.checked}" class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full ${subtask.checked ? 'bg-teal-300' : ''}">
+                    <i class="fa-solid fa-check text-white"></i>
+                </div>
+                <div class="flex flex-col gap-3">
+                    <div class= "flex flex-col gap-1">
+                        <input class="w-full text-xs font-normal leading-none p-2 bg-gray-100 rounded-md" type="text" value="${subtask.name}">
+                        <input class="w-full text-xs font-normal leading-none p-2 bg-gray-100 rounded-md" type="text"
+                                                placeholder="Description">
+                    </div>
+                    <div class="w-full flex gap-3">
+                        <div class="flex border border-gray-300 rounded-lg p-2 gap-1">
+                            <input type="date" class="text-green-500 text-xs font-light leading-[18px] cursor-pointer" value="">
+                        </div>
+                        <div class="relative inline-block">
+                            <div class="flex gap-1 border border-gray-300 px-4 py-2 rounded-md text-xs font-light leading-[18px] cursor-pointer">
+                                <img src="${getPriorityData(subtask.priority).imgSrc}" alt="">
+                                <div>${getPriorityData(subtask.priority).text}</div>
+                            </div>         
+                        </div>
+                    </div>
+                </div>
             </div>
-            <input class="w-full text-xs font-normal leading-none p-2" type="text" value="${subtask.name}">
         `;
         subtaskEditContainer.appendChild(subtaskDiv);
+    });
+
+    // Chức năng xóa cho Trash
+    document.getElementById('delete-edit').addEventListener('click', () => {
+        document.getElementById('confirmModal-edit').classList.remove('hidden');
+    })
+
+    selectedEdit = parseInt(todo.stt, 10);
+
+    // Khi người dùng xác nhận xóa
+    document.getElementById('confirmDelete-edit').addEventListener('click', () => {
+        deleteTodoByStt(selectedEdit);
+        document.getElementById('confirmModal-edit').classList.add('hidden');
+        modal.classList.add('hidden');
+    });
+
+    // Khi người dùng hủy xóa
+    document.getElementById('cancelDelete-edit').addEventListener('click', () => {
+        document.getElementById('confirmModal-edit').classList.add('hidden');
+    });
+
+    // Gán sự kiện cho background của modal để đóng khi click vào
+    document.getElementById('confirmModal-edit').addEventListener('click', function (event) {
+        if (event.target === this) {
+            document.getElementById('confirmModal-edit').classList.add('hidden');
+        }
     });
 
     // Hiển thị modal
@@ -622,8 +668,9 @@ document.getElementById('close-edit').addEventListener('click', (event) => {
 });
 
 // Save edit
-document.getElementById('SaveEdit-btn').addEventListener('click', function() {
+document.getElementById('SaveEdit-btn').addEventListener('click', function () {
     const modal = document.getElementById('editModal');
+    const priorityEdit = document.getElementById('priority-edit');
     const todoStt = parseInt(modal.getAttribute('data-todo-stt'), 10);
     const todoIndex = todos.findIndex(t => t.stt === todoStt);
 
@@ -634,9 +681,12 @@ document.getElementById('SaveEdit-btn').addEventListener('click', function() {
 
     // Lấy dữ liệu từ modal
     const inputs = modal.querySelectorAll('input');
-    const priority = modal.querySelector('.selected-priority').getAttribute('data-priority');
+    const priority = priorityEdit.querySelector('.selected-priority').getAttribute('data-priority');
     // Tìm stt lớn nhất của subtasks hiện tại
     const maxSubtaskStt = findMaxSubtaskStt(todoStt);
+
+    // Console log subtasks trước khi khởi tạo lại
+    console.log('Subtasks trước khi khởi tạo lại:', todos[todoIndex].subtasks);
 
     // Cập nhật thông tin của todo
     todos[todoIndex] = {
@@ -647,41 +697,55 @@ document.getElementById('SaveEdit-btn').addEventListener('click', function() {
         priority: priority,
         subtasks: [] // Khởi tạo danh sách subtasks mới
     };
+    // Console log subtasks sau khi khởi tạo lại
+    console.log('Subtasks sau khi khởi tạo lại:', todos[todoIndex].subtasks);
 
     // Lấy các subtasks từ modal và tạo stt mới
     const subtaskEditContainer = document.getElementById('subtaskedit');
     const subtaskDivs = subtaskEditContainer.querySelectorAll('.flex'); // Chọn tất cả các phần tử với lớp 'flex'
     let nextStt = maxSubtaskStt;
 
+    // Xóa danh sách subtasks cũ để không bị trùng lặp
+    todos[todoIndex].subtasks = [];
+
     subtaskDivs.forEach(div => {
-        const subtaskNameInput = div.querySelector('input');
+        const subtaskNameInput = div.querySelector('input[type="text"]');
         const subtaskCheckedDiv = div.querySelector('div[data-checked]');
 
-
         if (subtaskNameInput && subtaskCheckedDiv) {
-            const subtaskName = subtaskNameInput.value;
+            const subtaskName = subtaskNameInput.value.trim(); // Loại bỏ khoảng trắng đầu và cuối
             const subtaskChecked = subtaskCheckedDiv.getAttribute('data-checked') === 'true';
 
-            todos[todoIndex].subtasks.push({
-                name: subtaskName,
-                stt: ++nextStt,
-                checked: subtaskChecked
-            });
+            if (subtaskName) { // Chỉ thêm subtask nếu tên không rỗng
+                todos[todoIndex].subtasks.push({
+                    name: subtaskName,
+                    stt: ++nextStt,
+                    checked: subtaskChecked
+                });
+            }
         } else {
             console.error('Subtask elements are missing or incorrectly configured');
         }
     });
 
-    // Thêm các subtasks từ subtaskitems vào todos
-    subtaskitems.forEach(subtask => {
-        todos[todoIndex].subtasks.push({
-            name: subtask.name,
-            stt: nextStt++,
-            checked: subtask.checked
-        });
-    });
+    // Debug: Kiểm tra danh sách subtasks sau khi thêm mới
+    console.log('Subtasks sau khi thêm mới:', todos[todoIndex].subtasks);
 
-    subtaskitems = [];
+    // Kiểm tra nếu subtaskitems không trống
+    if (subtaskitems.length > 0) {
+        subtaskitems.forEach(subtask => {
+            todos[todoIndex].subtasks.push({
+                name: subtask.name,
+                stt: nextStt++,
+                checked: subtask.checked
+            });
+        });
+
+        // Làm trống subtaskitems
+        subtaskitems = [];
+    }
+    // Debug: Kiểm tra danh sách subtasks sau khi thêm mới
+    console.log('Subtasks sau khi thêm mới:', todos[todoIndex].subtasks);
 
     // Đóng modal
     modal.classList.add('hidden');
