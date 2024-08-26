@@ -115,7 +115,7 @@
                         <div id="mark-btn"
                             class="h-6 justify-end items-center gap-1 inline-flex cursor-pointer p-2 active:bg-gray-200 rounded-[15px]">
                             <img src="img/Content/check2-all.svg" alt="">
-                            <p class="text-black text-xs font-bold leading-[18px]">Mark Completed</p>
+                            <p id="markText-btn" class="text-black text-xs font-bold leading-[18px]">Mark Completed</p>
                         </div>
                         <div>
                             <label class="relative block">
@@ -206,7 +206,7 @@
                         </form>
                     </div>
                 </div>
-                <!-- Modal Confirm -->
+                <!-- Modal Confirm Delete -->
                 <div id="confirmModal"
                     class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center">
                     <div class="bg-white p-6 rounded-lg">
@@ -215,6 +215,18 @@
                         <div class="flex justify-around gap-2">
                             <button id="cancelDelete" class="bg-gray-300 text-black px-4 py-2 rounded">Cancel</button>
                             <button id="confirmDelete" class="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal Confirm Mark -->
+                <div id="confirmModal-Mark"
+                    class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center">
+                    <div class="bg-white p-6 rounded-lg">
+                        <p class="text-black text-sm font-bold mb-4">Are you sure you want to mark <span id="Mark-text"></span> the selected items?
+                        </p>
+                        <div class="flex justify-around gap-2">
+                            <button id="cancelMark" class="bg-gray-300 text-black px-4 py-2 rounded">Cancel</button>
+                            <button id="confirmMark" class="bg-red-500 text-white px-4 py-2 rounded">Mark</button>
                         </div>
                     </div>
                 </div>
@@ -257,12 +269,8 @@
                                 <hr>
                                 <div class="lg:h-[560px] overflow-auto">
                                     <div id="subtaskedit" class="py-2 px-2">
-                                        <!-- <div class="flex justify-center items-center gap-3 pl-4 pr-4">
-                                            <input class="w-full text-xs font-normal leading-none p-2" type="text"
-                                                placeholder="Subtask">
-                                        </div> -->
                                     </div>
-                                    <div id="subtaskadd">
+                                    <div id="subtaskadd" class="py-2 px-2">
                                         <!-- New subtasks -->
                                     </div>
                                     <!-- Add subtask button -->
@@ -275,22 +283,6 @@
                                             Add subtask
                                         </div>
                                     </div>
-                                    <!-- Add subtask form -->
-                                    <!-- <div  class=" flex justify-center items-center gap-1">
-                                        <div
-                                            class="flex justify-center items-center gap-3 border-2 border-gray-400 m-1 rounded-lg">
-                                            <input  class="w-full text-xs font-normal leading-none p-2"
-                                                type="text" placeholder="Subtask">
-                                        </div>
-                                        <div class="group">
-                                            <i
-                                                class="fa-solid fa-minus text-red-600 bg-transparent group-hover:bg-red-500 group-hover:text-white group-active:bg-red-700 w-5 h-5 flex items-center justify-center rounded-full"></i>
-                                        </div>
-                                        <div  class="group">
-                                            <i
-                                                class="fa-regular fa-plus text-teal-300 bg-transparent group-hover:bg-teal-300 group-hover:text-white group-active:bg-teal-400 w-5 h-5 flex items-center justify-center rounded-full"></i>
-                                        </div>
-                                    </div> -->
                                     <!-- Form add subtask -->
                                     <form id="AddsubtaskForm" class="hidden border border-gray-200 p-3 rounded-[10px]"
                                         action="">
@@ -301,13 +293,13 @@
                                                     type="text" placeholder="Subtask name">
                                             </div>
                                             <div>
-                                                <input
+                                                <input id="subtaskDes"
                                                     class="w-full text-xs font-normal leading-none p-2 bg-gray-100 rounded-md"
                                                     type="text" placeholder="Description">
                                             </div>
                                             <div class="w-full flex gap-3">
                                                 <div class="flex border border-gray-300 rounded-lg p-2 gap-1">
-                                                    <input type="date" id=""
+                                                    <input type="date" id="subtaskDate"
                                                         class=" text-green-500 text-xs font-light leading-[18px]">
                                                 </div>
                                                 <div class="relative inline-block text-xs font-light leading-[18px]">
@@ -365,10 +357,6 @@
                                     </div>
                                     <hr>
                                     <!-- Date -->
-                                    <!-- <div class="w-full flex rounded-lg gap-1">
-                                        <input type="date" id="datepicker"
-                                            class="w-full bg-gray-100 text-green-500 text-xs font-light leading-[18px] px-2 py-1">
-                                    </div> -->
                                     <div class="flex flex-col gap-3">
                                         <p class="text-xs font-bold font-['Roboto'] leading-normal">Due date</p>
                                         <div class="relative w-full">
