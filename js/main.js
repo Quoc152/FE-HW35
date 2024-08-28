@@ -72,8 +72,8 @@ function showTodo(todo) {
             const subtaskDiv = document.createElement('div');
             subtaskDiv.className = 'flex justify-center items-center gap-3';
             subtaskDiv.innerHTML = `
-            <input id="checkbox-${todo.stt}-${index}" class="w-5 h-5 cursor-pointer" type="checkbox">
-            <div id="subchecked-${todo.stt}-${index}" class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full ${subtask.checked ? 'bg-teal-300' : ''}">
+            <input id="checkbox-${todo.stt}-${subtask.stt}" class="w-5 h-5 cursor-pointer" type="checkbox">
+            <div id="subchecked-${todo.stt}-${subtask.stt}" class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full ${subtask.checked ? 'bg-teal-300' : ''}">
                 <i class="fa-solid fa-check text-white"></i>
             </div>
             <p class="w-full text-sm font-normal leading-none pt-2 pb-2 ${subtask.checked ? 'line-through' : ''}">${subtask.name}</p>
@@ -88,11 +88,11 @@ function showTodo(todo) {
             // Kiểm tra xem sự kiện có phải là từ checkbox không
             if (target.tagName === 'INPUT' && target.type === 'checkbox') {
                 // Tìm chỉ số và tên của subtask
-                const [_, stt, index] = target.id.split('-');
-                const subtaskName = subtasksContainer.querySelector(`#subchecked-${stt}-${index}`).nextElementSibling.textContent.trim();
+                const [_, stt, subtaskStt] = target.id.split('-');
+                const subtaskName = subtasksContainer.querySelector(`#subchecked-${stt}-${subtaskStt}`).nextElementSibling.textContent.trim();
 
                 // Cập nhật mảng checkedItems
-                updateCheckedItems('subtask', parseInt(stt, 10), parseInt(index, 10), target.checked);
+                updateCheckedItems('subtask', parseInt(stt, 10), parseInt(subtaskStt, 10), target.checked);
                 checkCompletionStatus(checkedItems, todos);
             }
         });
@@ -134,8 +134,7 @@ function showTodo(todo) {
                 populateEditModal(todo.stt);
             } else if (action === 'Delete') {
                 console.log('Delete action for todo with ID:', todo.stt);
-                // Thực hiện hành động xóa cho todo hiện tại
-                deleteTodoByStt(parseInt(todo.stt, 10));
+                setupDeleteConfirmation(todo.stt);
             }
             dropdownMenu.classList.add('hidden');
         }
@@ -153,6 +152,7 @@ function renderTodos() {
     document.getElementById('todos-container').innerHTML = ''; // Xóa nội dung hiện tại
     todos.forEach(todo => showTodo(todo));
     updateTodosCount(todos);
+    checkedItems = [];
 }
 
 renderTodos();
@@ -160,6 +160,10 @@ renderTodos();
 // Cập nhật dữ liệu hình ảnh và văn bản dựa trên priority
 function getPriorityData(priority) {
     const priorityData = {
+        0: {
+            imgSrc: 'img/Content/BsFlag.svg',
+            text: 'Priority'
+        },
         1: {
             imgSrc: 'img/Content/BsFlagRed.svg',
             text: 'P1'
@@ -184,8 +188,55 @@ function getPriorityData(priority) {
     };
 }
 
+// Gán sự kiện dropdown cho container chỉ định
+function setupPrioritySelection(container) {
+    const selectedPriority = container.querySelector('.selected-priority');
+    const priorityOptions = container.querySelector('.priority-options');
+
+    selectedPriority.addEventListener('click', function () {
+        priorityOptions.classList.toggle('hidden');
+    });
+
+    priorityOptions.addEventListener('click', function (event) {
+        if (event.target.tagName === 'LI' || event.target.tagName === 'IMG') {
+            selectedPriority.innerHTML = event.target.closest('li').innerHTML;
+            priorityOptions.classList.add('hidden');
+            // Cập nhật giá trị data-priority trong sự kiện này
+            const priorityValue = event.target.closest('li').getAttribute('data-priority');
+            selectedPriority.setAttribute('data-priority', priorityValue);
+        }
+    });
+
+    // Đóng menu khi click ra ngoài
+    document.addEventListener('click', function (event) {
+        if (!selectedPriority.contains(event.target) && !priorityOptions.contains(event.target)) {
+            priorityOptions.classList.add('hidden');
+        }
+    });
+}
+
+// Reset priority
+function resetPriority(container) {
+    const defaultPriority = 0;
+    const defaultData = getPriorityData(defaultPriority);
+
+    const selectedPriority = container.querySelector('.selected-priority');
+    const priorityOptions = container.querySelector('.priority-options');
+
+    if (selectedPriority && priorityOptions) {
+        selectedPriority.innerHTML = `
+            <img src="${defaultData.imgSrc}" alt="">
+            <div>${defaultData.text}</div>
+        `;
+
+        selectedPriority.setAttribute('data-priority', defaultPriority);
+
+        priorityOptions.classList.add('hidden');
+    }
+}
+
 // Hàm để thêm hoặc xóa item khỏi mảng
-function updateCheckedItems(type, todoStt, subtaskIndex, checked) {
+function updateCheckedItems(type, todoStt, subtaskStt, checked) {
     if (type === 'todo') {
         // Xử lý cho todo
         const existingIndex = checkedItems.findIndex(item => item.type === 'todo' && item.todoStt === todoStt);
@@ -200,10 +251,10 @@ function updateCheckedItems(type, todoStt, subtaskIndex, checked) {
         }
     } else if (type === 'subtask') {
         // Xử lý cho subtask
-        const existingIndex = checkedItems.findIndex(item => item.type === 'subtask' && item.todoStt === todoStt && item.subtaskIndex === subtaskIndex);
+        const existingIndex = checkedItems.findIndex(item => item.type === 'subtask' && item.todoStt === todoStt && item.subtaskStt === subtaskStt);
         if (checked) {
             if (existingIndex === -1) {
-                checkedItems.push({ type: 'subtask', todoStt, subtaskIndex });
+                checkedItems.push({ type: 'subtask', todoStt, subtaskStt });
             }
         } else {
             if (existingIndex !== -1) {
@@ -240,12 +291,16 @@ function markCompleted() {
                 renderTodos();
             }
         } else if (item.type === 'subtask') {
-            // Tìm todo và subtask theo stt và tên, sau đó cập nhật thuộc tính checked
+            // Tìm todo và subtask theo stt, sau đó cập nhật thuộc tính checked
             const todo = todos.find(t => t.stt === item.todoStt);
-            if (todo && todo.subtasks[item.subtaskIndex]) {
-                todo.subtasks[item.subtaskIndex].checked = !todo.subtasks[item.subtaskIndex].checked; // Mark hoặc unmark
-                saveToLocalStorage(todos);
-                renderTodos();
+            if (todo && todo.subtasks) {
+                // Tìm subtask theo stt
+                const subtask = todo.subtasks.find(s => s.stt === item.subtaskStt);
+                if (subtask) {
+                    subtask.checked = !subtask.checked; // Mark hoặc unmark
+                    saveToLocalStorage(todos);
+                    renderTodos();
+                }
             }
         }
     });
@@ -253,7 +308,7 @@ function markCompleted() {
 
 // Hàm để xóa các items trong todos dựa trên checkedItems
 function deleteCheckedItems() {
-    // Xóa todo hoặc subtask theo kiểu 'reverse' để không bị ảnh hưởng bởi việc xóa các mục
+    // Xóa todo hoặc subtask theo kiểu 'reverse'
     for (let i = checkedItems.length - 1; i >= 0; i--) {
         const item = checkedItems[i];
         if (item.type === 'todo') {
@@ -264,11 +319,15 @@ function deleteCheckedItems() {
                 todos.splice(todoIndex, 1);
             }
         } else if (item.type === 'subtask') {
-            // Tìm todo theo stt và xóa subtask
+            // Tìm todo theo stt
             const todo = todos.find(t => t.stt === item.todoStt);
-            if (todo && todo.subtasks[item.subtaskIndex]) {
-                // Xóa subtask khỏi mảng subtasks
-                todo.subtasks.splice(item.subtaskIndex, 1);
+            if (todo && todo.subtasks) {
+                // Tìm và xóa subtask theo stt
+                const subtaskIndex = todo.subtasks.findIndex(s => s.stt === item.subtaskStt);
+                if (subtaskIndex > -1) {
+                    // Xóa subtask khỏi mảng subtasks
+                    todo.subtasks.splice(subtaskIndex, 1);
+                }
             }
         }
     }
@@ -322,13 +381,13 @@ function populateEditModal(todoStt) {
     const subtaskEditContainer = document.getElementById('subtaskedit');
     subtaskEditContainer.innerHTML = ''; // Xóa các subtask hiện tại
     document.getElementById('subtaskadd').innerHTML = '';
+    if (todo.subtasks.length > 0) {
+        todo.subtasks.forEach((subtask, index) => {
+            const subtaskDiv = document.createElement('div');
+            subtaskDiv.className = 'flex justify-between gap-3 pl-4 pr-4 border-b-2 border-gray-200 mb-2';
+            subtaskDiv.dataset.index = index;
 
-    todo.subtasks.forEach((subtask, index) => {
-        const subtaskDiv = document.createElement('div');
-        subtaskDiv.className = 'flex justify-between gap-3 pl-4 pr-4 border-b-2 border-gray-200 mb-2';
-        subtaskDiv.dataset.index = index;
-
-        subtaskDiv.innerHTML = `
+            subtaskDiv.innerHTML = `
             <div class="flex gap-3 pb-2">
                 <div id="checked-${todo.stt}-${index}" data-checked="${subtask.checked}" class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full ${subtask.checked ? 'bg-teal-300' : ''}">
                     <i class="fa-solid fa-check text-white"></i>
@@ -342,47 +401,96 @@ function populateEditModal(todoStt) {
                         <div class="flex border border-gray-300 rounded-lg p-2 gap-1">
                             <input id="dueDate-${todo.stt}-${index}" type="date" class="text-green-500 text-xs font-light leading-[18px] cursor-pointer" value="${subtask.dueDate}">
                         </div>
-                        <div class="relative inline-block">
-                            <div id="priority-${todo.stt}-${index}" class="flex gap-1 border border-gray-300 px-4 py-2 rounded-md text-xs font-light leading-[18px] cursor-pointer">
+                        <div data-priority="${subtask.priority}" id="priority-${todo.stt}-${index}" class="relative inline-block text-xs font-light leading-[18px]">
+                            <div data-priority="${subtask.priority}" id="SLpriority-${todo.stt}-${index}" class="selected-priority flex gap-1 border border-gray-300 px-4 py-2 rounded-md text-xs font-light leading-[18px] cursor-pointer hover:bg-gray-100 active:bg-gray-200">
                                 <img src="${getPriorityData(subtask.priority).imgSrc}" alt="">
                                 <div>${getPriorityData(subtask.priority).text}</div>
-                            </div>         
+                            </div>
+                            <ul
+                                                        class="priority-options absolute mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg hidden z-50">
+                                                        <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                            data-priority="1">
+                                                            <img src="img/Content/BsFlagRed.svg" alt="">
+                                                            P1
+                                                        </li>
+                                                        <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                            data-priority="2">
+                                                            <img src="img/Content/BsFlagOrange.svg" alt="">
+                                                            P2
+                                                        </li>
+                                                        <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                            data-priority="3">
+                                                            <img src="img/Content/BsFlagBlue.svg" alt="">
+                                                            P3
+                                                        </li>
+                                                        <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                            data-priority="4">
+                                                            <img src="img/Content/BsFlagGreen.svg" alt="">
+                                                            P4
+                                                        </li>
+                                                    </ul>         
                         </div>
                     </div>
                 </div>
             </div>
         `;
-        subtaskEditContainer.appendChild(subtaskDiv);
-    });
+            subtaskEditContainer.appendChild(subtaskDiv);
+            // Thiết lập sự kiện chọn priority cho từng subtask
+            const priorityContainer = document.getElementById(`priority-${todo.stt}-${index}`);
+            setupPrioritySelection(priorityContainer);
+        });
+    }
 
     // Chức năng xóa cho Trash
     document.getElementById('delete-edit').addEventListener('click', () => {
-        document.getElementById('confirmModal-edit').classList.remove('hidden');
+        setupDeleteConfirmation(todo.stt);
     })
-
-    selectedEdit = parseInt(todo.stt, 10);
-
-    // Khi người dùng xác nhận xóa
-    document.getElementById('confirmDelete-edit').addEventListener('click', () => {
-        deleteTodoByStt(selectedEdit);
-        document.getElementById('confirmModal-edit').classList.add('hidden');
-        modal.classList.add('hidden');
-    });
-
-    // Khi người dùng hủy xóa
-    document.getElementById('cancelDelete-edit').addEventListener('click', () => {
-        document.getElementById('confirmModal-edit').classList.add('hidden');
-    });
-
-    // Gán sự kiện cho background của modal để đóng khi click vào
-    document.getElementById('confirmModal-edit').addEventListener('click', function (event) {
-        if (event.target === this) {
-            document.getElementById('confirmModal-edit').classList.add('hidden');
-        }
-    });
 
     // Hiển thị modal
     modal.classList.remove('hidden');
+}
+
+// Hàm gán sự kiện hiển thị modal delete cho dropdown và trash
+function setupDeleteConfirmation(stt) {
+    selectedEdit = parseInt(stt, 10);
+    const confirmDeleteBtn = document.getElementById('confirmDelete-edit');
+    const cancelDeleteBtn = document.getElementById('cancelDelete-edit');
+    const confirmModal = document.getElementById('confirmModal-edit');
+    const modal = document.getElementById('editModal');
+
+    // Xóa các sự kiện cũ trước khi gán mới
+    confirmDeleteBtn.removeEventListener('click', handleConfirmDelete);
+    cancelDeleteBtn.removeEventListener('click', handleCancelDelete);
+    confirmModal.removeEventListener('click', handleModalClick);
+
+    document.getElementById('confirmModal-edit').classList.remove('hidden');
+
+    // Định nghĩa các hàm xử lý sự kiện
+    function handleConfirmDelete() {
+        // Kiểm tra trạng thái của modal và thay đổi lớp
+        if (modal.classList.contains('hidden')) {
+        } else {
+            modal.classList.add('hidden'); // Ẩn modal nếu nó đang hiển thị
+        }
+
+        deleteTodoByStt(selectedEdit);
+        confirmModal.classList.add('hidden');
+    }
+
+    function handleCancelDelete() {
+        confirmModal.classList.add('hidden');
+    }
+
+    function handleModalClick(event) {
+        if (event.target === this) {
+            confirmModal.classList.add('hidden');
+        }
+    }
+
+    // Gán sự kiện cho các phần tử
+    confirmDeleteBtn.addEventListener('click', handleConfirmDelete);
+    cancelDeleteBtn.addEventListener('click', handleCancelDelete);
+    confirmModal.addEventListener('click', handleModalClick);
 }
 
 // Tìm stt lớn nhất của substasks trong 1 todos được chỉ định
@@ -467,7 +575,7 @@ function checkCompletionStatus(checkedItems, todos) {
         } else if (item.type === 'subtask') {
             const todo = todos.find(t => t.stt === item.todoStt);
             if (todo) {
-                const subtask = todo.subtasks.find((st, index) => index === item.subtaskIndex);
+                const subtask = todo.subtasks.find(st => st.stt === item.subtaskStt);
                 if (subtask) {
                     if (subtask.checked) {
                         allUnchecked = false;
@@ -482,7 +590,7 @@ function checkCompletionStatus(checkedItems, todos) {
     // Cập nhật nội dung của <span id="Mark-text"></span>
     const markTextElement = document.getElementById("Mark-text");
     const markTextBtn = document.getElementById('markText-btn');
-    
+
     if (allChecked && !allUnchecked) {
         markTextElement.textContent = "uncompleted";
         markTextBtn.textContent = "Mark Uncompleted";
@@ -541,32 +649,6 @@ document.getElementById('confirmModal').addEventListener('click', function (even
 // FORM ADD TASK
 // Priority selection
 document.addEventListener("DOMContentLoaded", function () {
-    function setupPrioritySelection(container) {
-        const selectedPriority = container.querySelector('.selected-priority');
-        const priorityOptions = container.querySelector('.priority-options');
-
-        selectedPriority.addEventListener('click', function () {
-            priorityOptions.classList.toggle('hidden');
-        });
-
-        priorityOptions.addEventListener('click', function (event) {
-            if (event.target.tagName === 'LI' || event.target.tagName === 'IMG') {
-                selectedPriority.innerHTML = event.target.closest('li').innerHTML;
-                priorityOptions.classList.add('hidden');
-                // Cập nhật giá trị data-priority trong sự kiện này
-                const priorityValue = event.target.closest('li').getAttribute('data-priority');
-                selectedPriority.setAttribute('data-priority', priorityValue);
-            }
-        });
-
-        // Đóng menu khi click ra ngoài
-        document.addEventListener('click', function (event) {
-            if (!selectedPriority.contains(event.target) && !priorityOptions.contains(event.target)) {
-                priorityOptions.classList.add('hidden');
-            }
-        });
-    }
-
     // Cấu hình priority cho form thêm
     setupPrioritySelection(document.getElementById('addTaskForm'));
 
@@ -577,20 +659,22 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
-// Lựa chọn từng priority
-document.querySelectorAll('.priority-options li').forEach(option => {
-    option.addEventListener('click', function () {
-        const priorityValue = this.getAttribute('data-priority');
-        const priorityText = this.innerText.trim();
+document.addEventListener('click', function (event) {
+    if (event.target.closest('.priority-options li')) {
+        const option = event.target.closest('li');
+        const priorityValue = option.getAttribute('data-priority');
+        const priorityText = option.innerText.trim();
 
-        const priorityElement = document.querySelector('.selected-priority');
-        priorityElement.querySelector('img').src = this.querySelector('img').src;
+        // Tìm phần tử selected-priority trong cùng container
+        const priorityElement = option.closest('.priority-selection').querySelector('.selected-priority');
+        priorityElement.querySelector('img').src = option.querySelector('img').src;
         priorityElement.innerText = priorityText;
         priorityElement.setAttribute('data-priority', priorityValue);
 
-        this.parentElement.classList.add('hidden');
-    });
+        option.parentElement.classList.add('hidden');
+    }
 });
+
 
 // Dropdown edit và delete
 document.addEventListener('click', function (event) {
@@ -620,6 +704,8 @@ document.getElementById('Cancel-btn').addEventListener('click', (event) => {
     const form = document.getElementById('addTaskForm');
     const addTaskBtn = document.getElementById('AddTask-btn');
 
+    resetPriority(form);
+
     form.classList.add('hidden');
     addTaskBtn.classList.remove('hidden');
 });
@@ -633,7 +719,7 @@ document.getElementById('addTaskForm').addEventListener('submit', function (even
     const description = this.querySelector('input[type="text"][placeholder="Description"]').value;
     const dueDate = this.querySelector('input[type="date"]').value;
     const priorityElement = this.querySelector('.selected-priority');
-    const priority = priorityElement.getAttribute('data-priority'); // Default priority if not set
+    const priority = priorityElement.getAttribute('data-priority');
 
     // Kiểm tra nếu taskName trống
     if (!taskName) {
@@ -641,11 +727,11 @@ document.getElementById('addTaskForm').addEventListener('submit', function (even
         return;
     }
 
-    let maxStt = todos.reduce((max, todo) => Math.max(max, todo.stt), 0);
+    let maxStt = todos.reduce((max, todo) => Math.max(max, todo.stt), 0) + 1;
 
     // Tạo đối tượng todo mới
     const newTodo = {
-        stt: ++maxStt,
+        stt: maxStt,
         name: taskName,
         description: description,
         dueDate: dueDate,
@@ -694,17 +780,20 @@ document.getElementById('SaveAddSup').addEventListener('click', (event) => {
     const addSubForm = document.getElementById('AddsubtaskForm');
     const addSubBtn = document.getElementById('AddSubTask-btn');
     const subtaskField = document.getElementById('subtaskadd');
+    const priorityElement = addSubForm.querySelector('.selected-priority');
+    const priority = priorityElement.getAttribute('data-priority');
 
 
     if (subtaskName) {
-        let maxSttSubItem = subtaskitems.reduce((max, subtaskitem) => Math.max(max, subtaskitem.stt), 0);
+        let maxSttSubItem = subtaskitems.reduce((max, subtaskitem) => Math.max(max, subtaskitem.stt), 0) + 1;
 
         subtaskitems.push({
-            stt: ++maxSttSubItem,
+            stt: maxSttSubItem,
             name: subtaskName,
             checked: false,
             description: subtaskDes,
             dueDate: subtaskDate,
+            priority: parseInt(priority, 10),
         });
 
         // Tạo phần tử div cho subtask mới
@@ -717,17 +806,17 @@ document.getElementById('SaveAddSup').addEventListener('click', (event) => {
             </div>
             <div class="flex flex-col gap-3">
                 <div class= "flex flex-col gap-1">
-                    <input class="w-full text-xs font-normal leading-none p-2 bg-gray-100 rounded-md" type="text" value="${subtaskName}" readonly>
-                    <input class="w-full text-xs font-normal leading-none p-2 bg-gray-100 rounded-md" type="text" value="${subtaskDes}" readonly>
+                    <input class="w-full text-xs font-normal leading-none p-2 rounded-md" type="text" value="${subtaskName}" readonly>
+                    <input class="w-full text-xs font-normal leading-none p-2 rounded-md" type="text" value="${subtaskDes}" readonly>
                 </div>
                 <div class="w-full flex gap-3">
                     <div class="flex border border-gray-300 rounded-lg p-2 gap-1">
                         <input type="date" class="text-green-500 text-xs font-light leading-[18px] cursor-pointer" value="${subtaskDate}" readonly>
                     </div>
                     <div class="relative inline-block">
-                        <div class="flex gap-1 border border-gray-300 px-4 py-2 rounded-md text-xs font-light leading-[18px] cursor-pointer">
-                            <img src="${getPriorityData('medium').imgSrc}" alt="">
-                            <div>${getPriorityData('medium').text}</div>
+                        <div class="flex gap-1 border border-gray-300 px-4 py-2 rounded-md text-xs font-light leading-[18px] cursor-pointer hover:bg-gray-100 active:bg-gray-200">
+                            <img src="${getPriorityData(parseInt(priority, 10)).imgSrc}" alt="">
+                            <div>${getPriorityData(parseInt(priority, 10)).text}</div>
                         </div>         
                     </div>
                 </div>
@@ -747,6 +836,8 @@ document.getElementById('SaveAddSup').addEventListener('click', (event) => {
     } else {
         console.log('Vui lòng nhập tên subtask.');
     }
+
+    resetPriority(document.getElementById('AddsubtaskForm'));
 });
 
 // Cancel subtask
@@ -757,6 +848,8 @@ document.getElementById('CancelAddSup').addEventListener('click', (event) => {
     const subtaskInput = addSubForm.querySelector('input[type="text"]');
     const subtaskDesField = document.getElementById('subtaskDes');
     const subtaskDate = document.getElementById('subtaskDate');
+
+    resetPriority(addSubForm);
 
     addSubBtn.classList.remove('hidden');
     addSubForm.classList.add('hidden');
@@ -770,12 +863,14 @@ document.getElementById('CancelEdit-btn').addEventListener('click', (event) => {
     event.preventDefault();
     document.getElementById('editModal').classList.add('hidden');
     subtaskitems = [];
+    resetPriority(document.getElementById('AddsubtaskForm'));
 });
 
 document.getElementById('close-edit').addEventListener('click', (event) => {
     event.preventDefault();
     document.getElementById('editModal').classList.add('hidden');
     subtaskitems = [];
+    resetPriority(document.getElementById('AddsubtaskForm'));
 });
 
 // Save edit
@@ -805,7 +900,7 @@ document.getElementById('SaveEdit-btn').addEventListener('click', function () {
         name: inputs[0].value,
         description: inputs[1].value,
         dueDate: document.getElementById('datepicker-edit').value,
-        priority: priority,
+        priority: parseInt(priority, 10),
         subtasks: [] // Khởi tạo danh sách subtasks mới
     };
     // Console log subtasks sau khi khởi tạo lại
@@ -824,23 +919,23 @@ document.getElementById('SaveEdit-btn').addEventListener('click', function () {
         const subtaskNameInput = div.querySelector(`#name-${todoStt}-${subtaskIndex}`);
         const subtaskDescriptionInput = div.querySelector(`#description-${todoStt}-${subtaskIndex}`);
         const subtaskDueDateInput = div.querySelector(`#dueDate-${todoStt}-${subtaskIndex}`);
-        const subtaskPriorityDiv = div.querySelector(`#priority-${todoStt}-${subtaskIndex}`);
+        const subtaskPriorityDiv = div.querySelector(`#SLpriority-${todoStt}-${subtaskIndex}`);
         const subtaskCheckedDiv = div.querySelector(`#checked-${todoStt}-${subtaskIndex}`);
 
         if (subtaskNameInput && subtaskDescriptionInput && subtaskDueDateInput && subtaskPriorityDiv && subtaskCheckedDiv) {
             const subtaskName = subtaskNameInput.value.trim();
             const subtaskDescription = subtaskDescriptionInput.value.trim();
             const subtaskDueDate = subtaskDueDateInput.value;
-            const subtaskPriority = subtaskPriorityDiv.querySelector('div').textContent.trim();
+            const subtaskPriority = subtaskPriorityDiv.getAttribute('data-priority');
             const subtaskChecked = subtaskCheckedDiv.getAttribute('data-checked') === 'true';
 
             if (subtaskName) {
                 todos[todoIndex].subtasks.push({
-                    stt: Number(subtaskIndex) + 1, // Sử dụng số thứ tự từ subtaskIndex
+                    stt: Number(subtaskIndex) + 1,
                     name: subtaskName,
                     description: subtaskDescription,
                     dueDate: subtaskDueDate,
-                    priority: subtaskPriority,
+                    priority: parseInt(subtaskPriority, 10),
                     checked: subtaskChecked
                 });
             }
@@ -853,17 +948,18 @@ document.getElementById('SaveEdit-btn').addEventListener('click', function () {
     // Debug: Kiểm tra danh sách subtasks sau khi thêm mới
     console.log('Subtasks sau khi thêm mới:', todos[todoIndex].subtasks);
 
-    let nextStt = findMaxSubtaskStt(todoStt);
+    let nextStt = findMaxSubtaskStt(todoStt) + 1;
 
     // Kiểm tra nếu subtaskitems không trống
     if (subtaskitems.length > 0) {
         subtaskitems.forEach(subtask => {
             todos[todoIndex].subtasks.push({
                 name: subtask.name,
-                stt: nextStt++,
+                stt: nextStt,
                 checked: subtask.checked,
                 description: subtask.description,
-                dueDate: subtask.dueDate
+                dueDate: subtask.dueDate,
+                priority: subtask.priority
             });
         });
 
@@ -876,6 +972,8 @@ document.getElementById('SaveEdit-btn').addEventListener('click', function () {
     // Đóng modal
     modal.classList.add('hidden');
     console.log(todos);
+
+    resetPriority(document.getElementById('AddsubtaskForm'));
 
     saveToLocalStorage(todos);
     renderTodos();
