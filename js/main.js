@@ -24,6 +24,20 @@ function showTodo(todo) {
     // Tạo ID duy nhất cho mỗi dropdown
     const todoId = `todo-${todo.stt}`;
 
+    // Kiểm tra xem dueDate và priority có giá trị hay không
+    const dueDateHTML = todo.dueDate ? `
+        <div class="flex border border-gray-300 rounded-lg p-2 gap-1">
+            <input type="date" class="text-green-500 text-xs font-light leading-[18px]" readonly value="${todo.dueDate}">
+        </div>` : '';
+
+    const priorityHTML = todo.priority ? `
+        <div class="relative inline-block">
+            <div class="flex gap-1 border border-gray-300 px-4 py-2 rounded-md text-xs font-light leading-[18px]">
+                <img src="${getPriorityData(todo.priority).imgSrc}" alt="">
+                <div>${getPriorityData(todo.priority).text}</div>
+            </div>
+        </div>` : '';
+
     // Cấu trúc HTML cho todo
     todoDiv.innerHTML = `
         <div data-stt="${todo.stt}" class="cursor-pointer flex justify-between">
@@ -38,15 +52,8 @@ function showTodo(todo) {
                             <p class="w-full text-sm font-normal leading-none pt-2 pb-2 ${todo.checked ? 'line-through' : ''}">${todo.description}</p>
                         </div>
                         <div class="w-full flex gap-3">
-                            <div class="flex border border-gray-300 rounded-lg p-2 gap-1">
-                                <input type="date" class="text-green-500 text-xs font-light leading-[18px]" readonly value="${todo.dueDate}">
-                            </div>
-                            <div class="relative inline-block">
-                                <div class="flex gap-1 border border-gray-300 px-4 py-2 rounded-md text-xs font-light leading-[18px]">
-                                    <img src="${getPriorityData(todo.priority).imgSrc}" alt="">
-                                    <div>${getPriorityData(todo.priority).text}</div>
-                                </div>         
-                            </div>
+                        ${dueDateHTML}
+                        ${priorityHTML}
                         </div>
                     </div>
                 </div>
@@ -70,13 +77,37 @@ function showTodo(todo) {
     if (todo.subtasks && todo.subtasks.length > 0) {
         todo.subtasks.forEach((subtask, index) => {
             const subtaskDiv = document.createElement('div');
-            subtaskDiv.className = 'flex justify-center items-center gap-3';
-            subtaskDiv.innerHTML = `
-            <input id="checkbox-${todo.stt}-${subtask.stt}" class="w-5 h-5 cursor-pointer" type="checkbox">
-            <div id="subchecked-${todo.stt}-${subtask.stt}" class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full ${subtask.checked ? 'bg-teal-300' : ''}">
-                <i class="fa-solid fa-check text-white"></i>
+            subtaskDiv.className = 'flex justify-between items-center gap-3';
+
+            const subtaskDueDateHTML = subtask.dueDate ? `
+            <div class="flex rounded-lg px-2 gap-1">
+                <p class="italic text-gray-400 text-xs font-light leading-[18px] py-2">#</p>
+                <input type="date" class="italic text-green-500 text-xs font-light leading-[18px]" readonly value="${subtask.dueDate}">
             </div>
-            <p class="w-full text-sm font-normal leading-none pt-2 pb-2 ${subtask.checked ? 'line-through' : ''}">${subtask.name}</p>
+            ` : '';
+
+            const subtaskPriorityHTML = subtask.priority ? `
+            <div class="flex gap-1 px-4 py-2 rounded-md text-xs font-light leading-[18px]">
+                <img src="${getPriorityData(subtask.priority).imgSrc}" alt="">
+                <div class="italic">${getPriorityData(subtask.priority).text}</div>
+            </div>
+            ` : '';
+
+            subtaskDiv.innerHTML = `
+            <div class="flex justify-center items-center gap-3">
+                <input id="checkbox-${todo.stt}-${subtask.stt}" class="w-5 h-5 cursor-pointer" type="checkbox">
+                <div id="subchecked-${todo.stt}-${subtask.stt}" class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full ${subtask.checked ? 'bg-teal-300' : ''}">
+                    <i class="fa-solid fa-check text-white"></i>
+                </div>            
+                <p class=" text-sm font-normal leading-none pt-2 pb-2 ${subtask.checked ? 'line-through' : ''}">${subtask.name}</p>
+            </div>
+            <div class ="flex ">
+                <div>
+                    <p class="h-full text-gray-400 text-sm font-normal leading-none pt-2 pb-2 whitespace-nowrap italic">${subtask.description}</p>
+                </div>
+                ${subtaskDueDateHTML}
+                ${subtaskPriorityHTML}
+            </div>
         `;
             subtasksContainer.appendChild(subtaskDiv);
         });
@@ -149,7 +180,7 @@ function showTodo(todo) {
 // Hàm để hiển thị tất cả todos
 function renderTodos() {
     todos = loadFromLocalStorage();
-    document.getElementById('todos-container').innerHTML = ''; // Xóa nội dung hiện tại
+    document.getElementById('todos-container').innerHTML = '';
     todos.forEach(todo => showTodo(todo));
     updateTodosCount(todos);
     checkedItems = [];
@@ -521,6 +552,54 @@ function updateTodosCount(todos) {
     document.getElementById('comlTodos').innerText = completedTodos;
     document.getElementById('allTodos').innerText = totalTodos;
 }
+
+// Sự kiện search
+document.getElementById('searchInput').addEventListener('keypress', function (event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        const searchValue = this.value.trim();
+        if (searchValue) {
+            todos = loadFromLocalStorage();
+            document.getElementById('todos-container').innerHTML = '';
+            searchTask(searchValue);
+            checkedItems = [];
+
+            this.value = '';
+
+            document.getElementById('showall-btn').classList.remove('hidden');
+        }
+    }
+});
+
+// Sự kiện cho button Show all
+document.getElementById('showall-btn').addEventListener('click', () => {
+    document.getElementById('showall-btn').classList.add('hidden');
+    renderTodos();
+})
+
+// Hàm search
+function searchTask(query) {
+    const lowerCaseQuery = query.toLowerCase();
+
+    const results = todos.filter(todo => {
+        const titleMatches = todo.name.toLowerCase().includes(lowerCaseQuery);
+        const descriptionMatches = todo.description.toLowerCase().includes(lowerCaseQuery);
+
+        const subtaskMatches = todo.subtasks.some(subtask =>
+            subtask.name.toLowerCase().includes(lowerCaseQuery) ||
+            subtask.description.toLowerCase().includes(lowerCaseQuery)
+        );
+
+        return titleMatches || descriptionMatches || subtaskMatches;
+    });
+
+    if (results.length > 0) {
+        results.forEach(todo => showTodo(todo));
+    }
+
+    return results;
+}
+
 
 // MARK COMPLETED
 // Gán sự kiện cho nút "Mark Completed"

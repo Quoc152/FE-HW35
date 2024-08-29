@@ -107,6 +107,10 @@
                         </div>
                     </div>
                     <div class="justify-end items-center gap-[25px] inline-flex">
+                        <button 
+                                    id="showall-btn"
+                                    class="hidden bg-teal-300 hover:bg-teal-200 active:bg-teal-400 p-2 pl-4 pr-4 rounded-lg text-center text-white text-[10px] font-bold leading-[15px]">
+                                    Show all</button>
                         <div id="delete-btn"
                             class="h-6 justify-end items-center gap-1 inline-flex cursor-pointer p-2 active:bg-gray-200 rounded-[15px]">
                             <img src="img/Content/MdDelete.svg" alt="">
@@ -124,6 +128,7 @@
                                     <img src="img/Menu/Search.png" alt="">
                                 </span>
                                 <input
+                                    id="searchInput"
                                     class="placeholder:text-slate-400 block bg-white w-full border border-slate-300 rounded-[15px] py-2 pl-9 pr-3 shadow-sm focus:outline-none focus:border-sky-500 focus:ring-sky-500 focus:ring-1 sm:text-sm"
                                     placeholder="Search task" type="text" name="search" />
                             </label>
