@@ -1027,14 +1027,14 @@ document.getElementById('SaveEdit-btn').addEventListener('click', function () {
     // Debug: Kiểm tra danh sách subtasks sau khi thêm mới
     console.log('Subtasks sau khi thêm mới:', todos[todoIndex].subtasks);
 
-    let nextStt = findMaxSubtaskStt(todoStt) + 1;
+    let nextStt = findMaxSubtaskStt(todoStt);
 
     // Kiểm tra nếu subtaskitems không trống
     if (subtaskitems.length > 0) {
         subtaskitems.forEach(subtask => {
             todos[todoIndex].subtasks.push({
                 name: subtask.name,
-                stt: nextStt,
+                stt: ++nextStt,
                 checked: subtask.checked,
                 description: subtask.description,
                 dueDate: subtask.dueDate,
