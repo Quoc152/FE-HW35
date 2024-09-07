@@ -26,13 +26,13 @@ function showTodo(todo) {
 
     // Kiểm tra xem dueDate và priority có giá trị hay không
     const dueDateHTML = todo.dueDate ? `
-        <div class="flex border border-gray-300 rounded-lg p-2 gap-1">
+        <div class="h-[32px] flex border border-gray-300 rounded-lg p-2 gap-1">
             <input type="date" class="text-green-500 text-xs font-light leading-[18px]" readonly value="${todo.dueDate}">
         </div>` : '';
 
     const priorityHTML = todo.priority ? `
         <div class="relative inline-block">
-            <div class="flex gap-1 border border-gray-300 px-4 py-2 rounded-md text-xs font-light leading-[18px]">
+            <div class="h-[32px] flex gap-1 border border-gray-300 px-4 py-2 rounded-md text-xs font-light leading-[18px]">
                 <img src="${getPriorityData(todo.priority).imgSrc}" alt="">
                 <div>${getPriorityData(todo.priority).text}</div>
             </div>
@@ -40,16 +40,16 @@ function showTodo(todo) {
 
     // Cấu trúc HTML cho todo
     todoDiv.innerHTML = `
-        <div data-stt="${todo.stt}" class="cursor-pointer flex justify-between">
+        <div data-stt="${todo.stt}" class=" flex justify-between">
                 <div class="flex gap-3 pb-2">
-                    <input id="checkbox-${todo.stt}" class="w-5 h-5 cursor-pointer" type="checkbox">
-                    <div id="mainchecked-${todo.stt}" class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full ${todo.checked ? 'bg-teal-300' : ''}">
+                    <input id="checkbox-${todo.stt}" class="w-5 h-5 cursor-pointer mt-2" type="checkbox">
+                    <div id="mainchecked-${todo.stt}" class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full mt-2 ${todo.checked ? 'bg-teal-300' : ''}">
                         <i class="fa-solid fa-check text-white"></i>
                     </div>
                     <div class="flex flex-col gap-3">
-                        <div>
-                            <h4 class="w-full text-sm font-bold leading-none pt-2 pb-2 ${todo.checked ? 'line-through' : ''}">${todo.name}</h4>
-                            <p class="w-full text-sm font-normal leading-none pt-2 pb-2 ${todo.checked ? 'line-through' : ''}">${todo.description}</p>
+                        <div class="todo-info rounded-lg p-1 hover:bg-gray-100 cursor-pointer">
+                            <h4 class="w-full text-sm font-bold leading-none pt-2 pb-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[400px] ${todo.checked ? 'line-through' : ''}">${todo.name}</h4>
+                            <p class="w-full text-sm font-normal leading-loose pt-2 pb-2 max-w-[400px] line-clamp-4 ${todo.checked ? 'line-through' : ''}">${todo.description}</p>
                         </div>
                         <div class="w-full flex gap-3">
                         ${dueDateHTML}
@@ -80,14 +80,14 @@ function showTodo(todo) {
             subtaskDiv.className = 'flex justify-between items-center gap-3';
 
             const subtaskDueDateHTML = subtask.dueDate ? `
-            <div class="flex rounded-lg px-2 gap-1">
+            <div class="h-[32px] flex rounded-lg px-2 gap-1">
                 <p class="italic text-gray-400 text-xs font-light leading-[18px] py-2">#</p>
                 <input type="date" class="italic text-green-500 text-xs font-light leading-[18px]" readonly value="${subtask.dueDate}">
             </div>
             ` : '';
 
             const subtaskPriorityHTML = subtask.priority ? `
-            <div class="flex gap-1 px-4 py-2 rounded-md text-xs font-light leading-[18px]">
+            <div class="h-[32px] flex gap-1 px-4 py-2 rounded-md text-xs font-light leading-[18px]">
                 <img src="${getPriorityData(subtask.priority).imgSrc}" alt="">
                 <div class="italic">${getPriorityData(subtask.priority).text}</div>
             </div>
@@ -99,11 +99,11 @@ function showTodo(todo) {
                 <div id="subchecked-${todo.stt}-${subtask.stt}" class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full ${subtask.checked ? 'bg-teal-300' : ''}">
                     <i class="fa-solid fa-check text-white"></i>
                 </div>            
-                <p class=" text-sm font-normal leading-none pt-2 pb-2 ${subtask.checked ? 'line-through' : ''}">${subtask.name}</p>
+                <p class=" text-sm font-normal leading-none pt-2 pb-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[160px] ${subtask.checked ? 'line-through' : ''}">${subtask.name}</p>
             </div>
             <div class ="flex ">
                 <div>
-                    <p class="h-full text-gray-400 text-sm font-normal leading-none pt-2 pb-2 whitespace-nowrap italic">${subtask.description}</p>
+                    <p class="h-full text-gray-400 text-sm font-normal leading-none p-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[160px] italic">${subtask.description}</p>
                 </div>
                 ${subtaskDueDateHTML}
                 ${subtaskPriorityHTML}
@@ -171,8 +171,9 @@ function showTodo(todo) {
         }
     });
 
-    // Thêm sự kiện dblclick vào phần tử chứa todo
-    todoDiv.addEventListener('dblclick', () => {
+    // Thêm sự kiện dblclick vào div chứa h4 và p
+    const todoContainer = todoDiv.querySelector('.todo-info');
+    todoContainer.addEventListener('dblclick', () => {
         populateEditModal(parseInt(todo.stt, 10));
     });
 }
@@ -386,16 +387,15 @@ function populateEditModal(todoStt) {
 
     document.getElementById('todoname').textContent = todo.name;
 
-    // Cập nhật các trường nhập liệu
-    inputs[0].value = todo.name;
-    inputs[1].value = todo.description;
-    document.getElementById('datepicker-edit').value = todo.dueDate;
 
-    if (todo.checked) {
-        document.getElementById('mainchecked-edit').classList.add('bg-teal-300');
-    } else {
-        document.getElementById('mainchecked-edit').classList.remove('bg-teal-300');
-    }
+    // Cập nhật trạng thái của checkbox
+    const checkbox = document.getElementById('mainchecked-edit');
+    checkbox.checked = todo.checked;
+
+    // Cập nhật các trường nhập liệu
+    inputs[1].value = todo.name;
+    inputs[2].value = todo.description;
+    document.getElementById('datepicker-edit').value = todo.dueDate;
 
     // Cập nhật Priority
     const priorityEdit = document.getElementById('priority-edit');
@@ -420,45 +420,52 @@ function populateEditModal(todoStt) {
 
             subtaskDiv.innerHTML = `
             <div class="flex gap-3 pb-2">
-                <div id="checked-${todo.stt}-${index}" data-checked="${subtask.checked}" class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full ${subtask.checked ? 'bg-teal-300' : ''}">
-                    <i class="fa-solid fa-check text-white"></i>
-                </div>
+                <div class="inline-flex items-start">
+                    <label class="flex items-center cursor-pointer relative mt-1">
+                        <input id="checked-${todo.stt}-${index}" type="checkbox" ${subtask.checked ? 'checked' : ''} class="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded-full shadow hover:shadow-md border border-slate-300 checked:bg-teal-300 checked:border-teal-300" />
+                        <span class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" stroke="currentColor" stroke-width="1">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        </span>
+                    </label>
+                </div>                    
                 <div class="flex flex-col gap-3">
                     <div class="flex flex-col gap-1">
-                        <input id="name-${todo.stt}-${index}" class="w-full text-xs font-normal leading-none p-2 bg-gray-100 rounded-md" type="text" value="${subtask.name}">
-                        <input id="description-${todo.stt}-${index}" class="w-full text-xs font-normal leading-none p-2 bg-gray-100 rounded-md" type="text" value="${subtask.description}" placeholder="Description">
+                        <input id="name-${todo.stt}-${index}" class="w-full text-xs font-normal leading-none p-2 bg-gray-100 rounded-md whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]" type="text" value="${subtask.name}">
+                        <input id="description-${todo.stt}-${index}" class="w-full text-xs font-normal leading-none p-2 bg-gray-100 rounded-md whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]" type="text" value="${subtask.description}" placeholder="Description">
                     </div>
                     <div class="w-full flex gap-3">
-                        <div class="flex border border-gray-300 rounded-lg p-2 gap-1">
+                        <div class="h-[32px] flex border border-gray-300 rounded-lg p-2 gap-1">
                             <input id="dueDate-${todo.stt}-${index}" type="date" class="text-green-500 text-xs font-light leading-[18px] cursor-pointer" value="${subtask.dueDate}">
                         </div>
                         <div data-priority="${subtask.priority}" id="priority-${todo.stt}-${index}" class="relative inline-block text-xs font-light leading-[18px]">
-                            <div data-priority="${subtask.priority}" id="SLpriority-${todo.stt}-${index}" class="selected-priority flex gap-1 border border-gray-300 px-4 py-2 rounded-md text-xs font-light leading-[18px] cursor-pointer hover:bg-gray-100 active:bg-gray-200">
+                            <div data-priority="${subtask.priority}" id="SLpriority-${todo.stt}-${index}" class="h-[32px] selected-priority flex gap-1 border border-gray-300 px-4 py-2 rounded-md text-xs font-light leading-[18px] cursor-pointer hover:bg-gray-100 active:bg-gray-200">
                                 <img src="${getPriorityData(subtask.priority).imgSrc}" alt="">
                                 <div>${getPriorityData(subtask.priority).text}</div>
                             </div>
                             <ul
-                                                        class="priority-options absolute mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg hidden z-50">
-                                                        <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                                            data-priority="1">
-                                                            <img src="img/Content/BsFlagRed.svg" alt="">
-                                                            P1
-                                                        </li>
-                                                        <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                                            data-priority="2">
-                                                            <img src="img/Content/BsFlagOrange.svg" alt="">
-                                                            P2
-                                                        </li>
-                                                        <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                                            data-priority="3">
-                                                            <img src="img/Content/BsFlagBlue.svg" alt="">
-                                                            P3
-                                                        </li>
-                                                        <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                                            data-priority="4">
-                                                            <img src="img/Content/BsFlagGreen.svg" alt="">
-                                                            P4
-                                                        </li>
+                                class="priority-options absolute mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg hidden z-50">
+                                <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                    data-priority="1">
+                                    <img src="img/Content/BsFlagRed.svg" alt="">
+                                    P1
+                                </li>
+                                <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                    ata-priority="2">
+                                    <img src="img/Content/BsFlagOrange.svg" alt="">
+                                    P2
+                                </li>
+                                <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                    data-priority="3">
+                                    <img src="img/Content/BsFlagBlue.svg" alt="">
+                                    P3
+                                </li>
+                                <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                    data-priority="4">
+                                    <img src="img/Content/BsFlagGreen.svg" alt="">
+                                    P4
+                                </li>
                                                     </ul>         
                         </div>
                     </div>
@@ -776,6 +783,9 @@ document.getElementById('AddTask-btn').addEventListener('click', () => {
 
     form.classList.remove('hidden');  // Hiển thị form
     addTaskBtn.classList.add('hidden'); // Ẩn thẻ AddTask-btn
+
+    // Cuộn xuống phần tử form
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 document.getElementById('Cancel-btn').addEventListener('click', (event) => {
@@ -783,10 +793,20 @@ document.getElementById('Cancel-btn').addEventListener('click', (event) => {
     const form = document.getElementById('addTaskForm');
     const addTaskBtn = document.getElementById('AddTask-btn');
 
+    document.getElementById('addTaskForm').reset();
     resetPriority(form);
 
     form.classList.add('hidden');
     addTaskBtn.classList.remove('hidden');
+});
+
+// Ngăn chặn hành vi mặc định của phím Enter
+document.querySelectorAll('#addTaskForm input[type="text"], #addTaskForm input[type="date"]').forEach(input => {
+    input.addEventListener('keypress', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+    });
 });
 
 // Thêm một todo
@@ -794,8 +814,8 @@ document.getElementById('addTaskForm').addEventListener('submit', function (even
     event.preventDefault(); // Ngăn chặn hành vi mặc định của form
 
     // Lấy dữ liệu từ các trường nhập liệu
-    const taskName = this.querySelector('input[type="text"][placeholder="Task name"]').value;
-    const description = this.querySelector('input[type="text"][placeholder="Description"]').value;
+    const taskName = this.querySelector('input[type="text"][placeholder="Task name"]').value.trim();
+    const description = this.querySelector('input[type="text"][placeholder="Description"]').value.trim();
     const dueDate = this.querySelector('input[type="date"]').value;
     const priorityElement = this.querySelector('.selected-priority');
     const priority = priorityElement.getAttribute('data-priority');
@@ -838,6 +858,15 @@ document.getElementById('addTaskForm').addEventListener('submit', function (even
 
 
 // EDIT MODAL
+// Ngăn chặn hành vi mặc định của phím Enter trong form thêm subtask
+document.querySelectorAll('#AddsubtaskForm input[type="text"], #AddsubtaskForm input[type="date"]').forEach(input => {
+    input.addEventListener('keypress', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+    });
+});
+
 // Add subtask
 document.getElementById('AddSubTask-btn').addEventListener('click', () => {
     const addSubForm = document.getElementById('AddsubtaskForm');
@@ -845,6 +874,8 @@ document.getElementById('AddSubTask-btn').addEventListener('click', () => {
 
     addSubForm.classList.remove('hidden');
     addSubBtn.classList.add('hidden');
+
+    addSubForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 // Thêm sự kiện click cho nút SaveAddSup
@@ -853,7 +884,7 @@ document.getElementById('SaveAddSup').addEventListener('click', (event) => {
     const inputField = document.getElementById('subtaskInput');
     const subtaskName = document.getElementById('subtaskInput').value.trim();
     const subtaskDesField = document.getElementById('subtaskDes');
-    const subtaskDes = document.getElementById('subtaskDes').value;
+    const subtaskDes = document.getElementById('subtaskDes').value.trim();
     const subtaskDateField = document.getElementById('subtaskDate');
     const subtaskDate = document.getElementById('subtaskDate').value;
     const addSubForm = document.getElementById('AddsubtaskForm');
@@ -879,24 +910,58 @@ document.getElementById('SaveAddSup').addEventListener('click', (event) => {
         const subtaskDiv = document.createElement('div');
         subtaskDiv.className = 'flex justify-between gap-3 pl-4 pr-4 border-b-2 border-gray-200 mb-2';
         subtaskDiv.innerHTML = `
-        <div class="flex gap-3 pb-2">
-            <div id="" data-checked="false" class="w-5 h-5 flex justify-center items-center border border-gray-300 rounded-full">
-                <i class="fa-solid fa-check text-white"></i>
+        <div class="flex gap-3 pb-2">            
+            <div class="inline-flex items-start">
+                <label class="flex items-center cursor-pointer relative mt-1">
+                    <input id="checkedNewSub-${maxSttSubItem}" type="checkbox" class="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded-full shadow hover:shadow-md border border-slate-300 checked:bg-teal-300 checked:border-teal-300" />
+                    <span class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" stroke="currentColor" stroke-width="1">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    </span>
+                </label>
             </div>
             <div class="flex flex-col gap-3">
                 <div class= "flex flex-col gap-1">
-                    <input class="w-full text-xs font-normal leading-none p-2 rounded-md" type="text" value="${subtaskName}" readonly>
-                    <input class="w-full text-xs font-normal leading-none p-2 rounded-md" type="text" value="${subtaskDes}" readonly>
+                    <input id="nameNewSub-${maxSttSubItem}" class="w-full text-xs font-normal leading-none p-2 rounded-md bg-gray-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]" type="text" value="${subtaskName}">
+                    <input id="desNewSub-${maxSttSubItem}" class="w-full text-xs font-normal leading-none p-2 rounded-md bg-gray-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]" type="text" value="${subtaskDes}">
                 </div>
                 <div class="w-full flex gap-3">
-                    <div class="flex border border-gray-300 rounded-lg p-2 gap-1">
-                        <input type="date" class="text-green-500 text-xs font-light leading-[18px] cursor-pointer" value="${subtaskDate}" readonly>
+                    <div class="h-[32px] flex border border-gray-300 rounded-lg p-2 gap-1">
+                        <input id="dateNewSub-${maxSttSubItem}" type="date" class="text-green-500 text-xs font-light leading-[18px] cursor-pointer" value="${subtaskDate}">
                     </div>
-                    <div class="relative inline-block">
-                        <div class="flex gap-1 border border-gray-300 px-4 py-2 rounded-md text-xs font-light leading-[18px] cursor-pointer hover:bg-gray-100 active:bg-gray-200">
+                    <div id="priNewSub-${maxSttSubItem}" class="relative inline-block text-xs font-light leading-[18px]">
+                        <div id="SLpriNewSub-${maxSttSubItem}" data-priority=${parseInt(priority, 10)}" class="h-[32px] selected-priority flex gap-1 border border-gray-300 px-4 py-2 rounded-md text-xs font-light leading-[18px] cursor-pointer hover:bg-gray-100 active:bg-gray-200">
                             <img src="${getPriorityData(parseInt(priority, 10)).imgSrc}" alt="">
                             <div>${getPriorityData(parseInt(priority, 10)).text}</div>
-                        </div>         
+                        </div>
+                        <ul
+                                class="priority-options absolute mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg hidden z-50">
+                                <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                    data-priority="1">
+                                    <img src="img/Content/BsFlagRed.svg" alt="">
+                                    P1
+                                </li>
+                                <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                    ata-priority="2">
+                                    <img src="img/Content/BsFlagOrange.svg" alt="">
+                                    P2
+                                </li>
+                                <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                    data-priority="3">
+                                    <img src="img/Content/BsFlagBlue.svg" alt="">
+                                    P3
+                                </li>
+                                <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                    data-priority="4">
+                                    <img src="img/Content/BsFlagGreen.svg" alt="">
+                                    P4
+                                </li>
+                        </ul>          
+                    </div>
+                    <div class="h-[32px] flex items-center gap-1 text-center text-xs font-light leading-[18px] italic px-3 py-2 border border-yellow-300 rounded-lg">
+                        <i class="fa-solid fa-fire text-yellow-300"></i>
+                        <p>New</p>
                     </div>
                 </div>
             </div>
@@ -904,6 +969,9 @@ document.getElementById('SaveAddSup').addEventListener('click', (event) => {
         `;
         subtaskField.appendChild(subtaskDiv);
 
+        // Thiết lập sự kiện chọn priority cho từng subtask
+        const priorityContainer = document.getElementById(`priNewSub-${maxSttSubItem}`);
+        setupPrioritySelection(priorityContainer);
 
         addSubBtn.classList.remove('hidden');
         addSubForm.classList.add('hidden');
@@ -964,6 +1032,31 @@ document.getElementById('SaveEdit-btn').addEventListener('click', function () {
         return;
     }
 
+    //Dữ liệu từ mảng subtaskitems
+    let maxSttSubItem = subtaskitems.reduce((max, subtaskitem) => Math.max(max, subtaskitem.stt), 0);
+
+    if (maxSttSubItem > 0) {
+        for (let i = 1; i <= maxSttSubItem; i++) {
+            const NewsubCheck = document.getElementById(`checkedNewSub-${i}`).checked;
+            const NewsubName = document.getElementById(`nameNewSub-${i}`).value.trim();
+            const NewsubDescription = document.getElementById(`desNewSub-${i}`).value.trim();
+            const NewsubDate = document.getElementById(`dateNewSub-${i}`).value;
+            const NewsubPriority = document.getElementById(`SLpriNewSub-${i}`).getAttribute('data-priority');
+
+            // Tìm phần tử trong mảng subtaskitems có stt bằng với i
+            const subtaskItem = subtaskitems.find(subtask => subtask.stt === i);
+
+            if (subtaskItem) {
+                // Cập nhật các giá trị mới vào phần tử đó
+                subtaskItem.checked = NewsubCheck;
+                subtaskItem.name = NewsubName;
+                subtaskItem.description = NewsubDescription;
+                subtaskItem.dueDate = NewsubDate;
+                subtaskItem.priority = parseInt(NewsubPriority, 10);
+            }
+        }
+    }
+
     // Lấy dữ liệu từ modal
     const inputs = modal.querySelectorAll('input');
     const priority = priorityEdit.querySelector('.selected-priority').getAttribute('data-priority');
@@ -976,10 +1069,11 @@ document.getElementById('SaveEdit-btn').addEventListener('click', function () {
     // Cập nhật thông tin của todo
     todos[todoIndex] = {
         ...todos[todoIndex],
-        name: inputs[0].value,
-        description: inputs[1].value,
+        name: inputs[1].value,
+        description: inputs[2].value,
         dueDate: document.getElementById('datepicker-edit').value,
         priority: parseInt(priority, 10),
+        checked: document.getElementById('mainchecked-edit').checked,
         subtasks: [] // Khởi tạo danh sách subtasks mới
     };
     // Console log subtasks sau khi khởi tạo lại
@@ -1006,7 +1100,7 @@ document.getElementById('SaveEdit-btn').addEventListener('click', function () {
             const subtaskDescription = subtaskDescriptionInput.value.trim();
             const subtaskDueDate = subtaskDueDateInput.value;
             const subtaskPriority = subtaskPriorityDiv.getAttribute('data-priority');
-            const subtaskChecked = subtaskCheckedDiv.getAttribute('data-checked') === 'true';
+            const subtaskChecked = subtaskCheckedDiv.checked;
 
             if (subtaskName) {
                 todos[todoIndex].subtasks.push({
@@ -1057,7 +1151,6 @@ document.getElementById('SaveEdit-btn').addEventListener('click', function () {
     saveToLocalStorage(todos);
     renderTodos();
 });
-
 
 
 

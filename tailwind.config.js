@@ -9,8 +9,14 @@ module.exports = {
       fontFamily: {
         sans: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'],
       },
+      colors: {
+        'checkbox-checked': '#e0f2f1', 
+        'checkbox-border': '#004d40',  
+      }
     }, 
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/line-clamp'),
+  ],
 }
 
