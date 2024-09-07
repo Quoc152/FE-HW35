@@ -452,7 +452,7 @@ function populateEditModal(todoStt) {
                                     P1
                                 </li>
                                 <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                    ata-priority="2">
+                                    data-priority="2">
                                     <img src="img/Content/BsFlagOrange.svg" alt="">
                                     P2
                                 </li>
@@ -943,7 +943,7 @@ document.getElementById('SaveAddSup').addEventListener('click', (event) => {
                                     P1
                                 </li>
                                 <li class="priority-options li flex gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                    ata-priority="2">
+                                    data-priority="2">
                                     <img src="img/Content/BsFlagOrange.svg" alt="">
                                     P2
                                 </li>
