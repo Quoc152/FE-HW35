@@ -47,11 +47,11 @@ function showTodo(todo) {
                         <i class="fa-solid fa-check text-white"></i>
                     </div>
                     <div class="flex flex-col gap-3">
-                        <div class="todo-info rounded-lg p-1 hover:bg-gray-100 cursor-pointer">
-                            <h4 class="w-full text-sm font-bold leading-none pt-2 pb-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[400px] ${todo.checked ? 'line-through' : ''}">${todo.name}</h4>
-                            <p class="w-full text-sm font-normal leading-loose pt-2 pb-2 max-w-[400px] line-clamp-4 ${todo.checked ? 'line-through' : ''}">${todo.description}</p>
+                        <div class="todo-info rounded-lg p-1 hover:bg-gray-100 cursor-pointer max-w-full">
+                            <h4 class="text-sm font-bold leading-none pt-2 pb-2 whitespace-nowrap overflow-hidden text-ellipsis sm:max-w-[500px] md:max-w-[700px] lg:max-w-[900px] xl:max-w-[1100px] 2xl:max-w-[1200px]  ${todo.checked ? 'line-through' : ''}">${todo.name}</h4>
+                            <p class="text-sm font-normal leading-loose pt-2 pb-2 sm:max-w-[500px] md:max-w-[700px] lg:max-w-[900px] xl:max-w-[1100px] 2xl:max-w-[1200px] line-clamp-4 ${todo.checked ? 'line-through' : ''}">${todo.description}</p>
                         </div>
-                        <div class="w-full flex gap-3">
+                        <div class="flex gap-3">
                         ${dueDateHTML}
                         ${priorityHTML}
                         </div>
@@ -313,6 +313,27 @@ function deleteTodoByStt(stt) {
 
 // Hàm để mark hoặc unmark các items trong todos dựa trên checkedItems
 function markCompleted() {
+    // Kiểm tra nếu chỉ có một todo chưa được đánh dấu hoàn thành
+    const uncheckedTodos = checkedItems.filter(item => {
+        if (item.type === 'todo') {
+            const todo = todos.find(t => t.stt === item.todoStt);
+            return todo && !todo.checked;
+        }
+        return false;
+    });
+
+    // Nếu chỉ có 1 todo chưa hoàn thành
+    if (uncheckedTodos.length === 1) {
+        const item = uncheckedTodos[0];
+        const todo = todos.find(t => t.stt === item.todoStt);
+        if (todo) {
+            todo.checked = true; // Đánh dấu todo hoàn thành
+            saveToLocalStorage(todos); // Lưu lại thay đổi
+            renderTodos(); // Render lại todos
+            return; // Thoát hàm
+        }
+    }
+
     checkedItems.forEach(item => {
         if (item.type === 'todo') {
             // Tìm todo theo stt và cập nhật thuộc tính checked
@@ -646,6 +667,7 @@ document.getElementById('confirmModal-Mark').addEventListener('click', function 
 function checkCompletionStatus(checkedItems, todos) {
     let allChecked = true;
     let allUnchecked = true;
+    let uncheckedCount = 0;
 
     // Duyệt qua từng phần tử trong checkedItems để kiểm tra trong todos
     checkedItems.forEach(item => {
@@ -656,6 +678,7 @@ function checkCompletionStatus(checkedItems, todos) {
                     allUnchecked = false;
                 } else {
                     allChecked = false;
+                    uncheckedCount++;
                 }
             }
         } else if (item.type === 'subtask') {
@@ -677,7 +700,10 @@ function checkCompletionStatus(checkedItems, todos) {
     const markTextElement = document.getElementById("Mark-text");
     const markTextBtn = document.getElementById('markText-btn');
 
-    if (allChecked && !allUnchecked) {
+    if (uncheckedCount === 1) {
+        markTextElement.textContent = "completed";
+        markTextBtn.textContent = "Mark Completed";
+    } else if (allChecked && !allUnchecked) {
         markTextElement.textContent = "uncompleted";
         markTextBtn.textContent = "Mark Uncompleted";
     } else if (!allChecked && !allUnchecked) {
