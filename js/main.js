@@ -331,17 +331,49 @@ function markCompleted() {
         return false;
     });
 
+    // Lọc ra những subtask chưa được đánh dấu hoàn thành
+    const uncheckedSubtasks = checkedItems.filter(item => {
+        if (item.type === 'subtask') {
+            const todo = todos.find(t => t.stt === item.todoStt);
+            const subtask = todo?.subtasks.find(s => s.stt === item.subtaskStt);
+            return subtask && !subtask.checked;
+        }
+        return false;
+    });
+
+    // Lọc ra những subtask đã được đánh dấu hoàn thành
+    const checkedSubtasks = checkedItems.filter(item => {
+        if (item.type === 'subtask') {
+            const todo = todos.find(t => t.stt === item.todoStt);
+            const subtask = todo?.subtasks.find(s => s.stt === item.subtaskStt);
+            return subtask && subtask.checked;
+        }
+        return false;
+    });
+
     // Nếu có cả todo đã checked và chưa checked, đánh dấu các todo chưa checked và thoát hàm
-    if (uncheckedTodos.length > 0 && checkedTodos.length > 0) {
+    if ((uncheckedTodos.length > 0 || uncheckedSubtasks.length > 0) && (checkedTodos.length > 0 || checkedSubtasks.length > 0)) {
         uncheckedTodos.forEach(item => {
             const todo = todos.find(t => t.stt === item.todoStt);
             if (todo) {
                 todo.checked = true;
             }
         });
+
+        uncheckedSubtasks.forEach(item => {
+            const todo = todos.find(t => t.stt === item.todoStt);
+            if (todo) {
+                const subtask = todo.subtasks.find(s => s.stt === item.subtaskStt);
+                if (subtask) {
+                    subtask.checked = true;
+                }
+            }
+        });
+
         saveToLocalStorage(todos); 
         renderTodos();
-        markCheckboxes() 
+        markCheckboxes();
+        checkCompletionStatus(checkedItems, todos); 
         return; 
     }
 
@@ -353,7 +385,8 @@ function markCompleted() {
                 todo.checked = !todo.checked; // Mark hoặc unmark
                 saveToLocalStorage(todos);
                 renderTodos();
-                markCheckboxes()
+                markCheckboxes();
+                checkCompletionStatus(checkedItems, todos);
             }
         } else if (item.type === 'subtask') {
             // Tìm todo và subtask theo stt, sau đó cập nhật thuộc tính checked
@@ -365,7 +398,8 @@ function markCompleted() {
                     subtask.checked = !subtask.checked; // Mark hoặc unmark
                     saveToLocalStorage(todos);
                     renderTodos();
-                    markCheckboxes()
+                    markCheckboxes();
+                    checkCompletionStatus(checkedItems, todos);
                 }
             }
         }
