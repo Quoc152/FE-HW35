@@ -184,7 +184,6 @@ function renderTodos() {
     document.getElementById('todos-container').innerHTML = '';
     todos.forEach(todo => showTodo(todo));
     updateTodosCount(todos);
-    checkedItems = [];
 }
 
 renderTodos();
@@ -306,6 +305,7 @@ function deleteTodoByStt(stt) {
         todos.splice(index, 1);
         saveToLocalStorage(todos);
         renderTodos();
+        checkedItems = [];
     } else {
         console.error('Todo with the given stt not found');
     }
@@ -313,7 +313,7 @@ function deleteTodoByStt(stt) {
 
 // Hàm để mark hoặc unmark các items trong todos dựa trên checkedItems
 function markCompleted() {
-    // Kiểm tra nếu chỉ có một todo chưa được đánh dấu hoàn thành
+    // Lọc ra những todo chưa được đánh dấu hoàn thành
     const uncheckedTodos = checkedItems.filter(item => {
         if (item.type === 'todo') {
             const todo = todos.find(t => t.stt === item.todoStt);
@@ -322,16 +322,27 @@ function markCompleted() {
         return false;
     });
 
-    // Nếu chỉ có 1 todo chưa hoàn thành
-    if (uncheckedTodos.length === 1) {
-        const item = uncheckedTodos[0];
-        const todo = todos.find(t => t.stt === item.todoStt);
-        if (todo) {
-            todo.checked = true; // Đánh dấu todo hoàn thành
-            saveToLocalStorage(todos); // Lưu lại thay đổi
-            renderTodos(); // Render lại todos
-            return; // Thoát hàm
+    // Lọc ra những todo đã được đánh dấu hoàn thành
+    const checkedTodos = checkedItems.filter(item => {
+        if (item.type === 'todo') {
+            const todo = todos.find(t => t.stt === item.todoStt);
+            return todo && todo.checked;
         }
+        return false;
+    });
+
+    // Nếu có cả todo đã checked và chưa checked, đánh dấu các todo chưa checked và thoát hàm
+    if (uncheckedTodos.length > 0 && checkedTodos.length > 0) {
+        uncheckedTodos.forEach(item => {
+            const todo = todos.find(t => t.stt === item.todoStt);
+            if (todo) {
+                todo.checked = true;
+            }
+        });
+        saveToLocalStorage(todos); 
+        renderTodos();
+        markCheckboxes() 
+        return; 
     }
 
     checkedItems.forEach(item => {
@@ -342,6 +353,7 @@ function markCompleted() {
                 todo.checked = !todo.checked; // Mark hoặc unmark
                 saveToLocalStorage(todos);
                 renderTodos();
+                markCheckboxes()
             }
         } else if (item.type === 'subtask') {
             // Tìm todo và subtask theo stt, sau đó cập nhật thuộc tính checked
@@ -353,11 +365,31 @@ function markCompleted() {
                     subtask.checked = !subtask.checked; // Mark hoặc unmark
                     saveToLocalStorage(todos);
                     renderTodos();
+                    markCheckboxes()
                 }
             }
         }
     });
 }
+
+function markCheckboxes() {
+    checkedItems.forEach(item => {
+        if (item.type === 'todo') {
+            // Tìm checkbox của todo và đánh dấu
+            const todoCheckbox = document.getElementById(`checkbox-${item.todoStt}`);           
+            if (todoCheckbox) {
+                todoCheckbox.checked = true; 
+            }
+        } else if (item.type === 'subtask') {
+            // Tìm checkbox của subtask và đánh dấu
+            const subtaskCheckbox = document.getElementById(`checkbox-${item.todoStt}-${item.subtaskStt}`);
+            if (subtaskCheckbox) {
+                subtaskCheckbox.checked = true;
+            }
+        }
+    });
+}
+
 
 // Hàm để xóa các items trong todos dựa trên checkedItems
 function deleteCheckedItems() {
@@ -387,6 +419,7 @@ function deleteCheckedItems() {
     // Lưu và render lại sau khi xóa
     saveToLocalStorage(todos);
     renderTodos();
+    checkedItems = [];
 }
 
 
@@ -603,6 +636,7 @@ document.getElementById('searchInput').addEventListener('keypress', function (ev
 document.getElementById('showall-btn').addEventListener('click', () => {
     document.getElementById('showall-btn').classList.add('hidden');
     renderTodos();
+    checkedItems = [];
 })
 
 // Hàm search
@@ -650,7 +684,6 @@ const hideMarkModal = () => {
 
 document.getElementById('confirmMark').addEventListener('click', () => {
     markCompleted();
-    checkedItems = [];
     hideMarkModal();
 })
 
@@ -667,7 +700,6 @@ document.getElementById('confirmModal-Mark').addEventListener('click', function 
 function checkCompletionStatus(checkedItems, todos) {
     let allChecked = true;
     let allUnchecked = true;
-    let uncheckedCount = 0;
 
     // Duyệt qua từng phần tử trong checkedItems để kiểm tra trong todos
     checkedItems.forEach(item => {
@@ -678,7 +710,6 @@ function checkCompletionStatus(checkedItems, todos) {
                     allUnchecked = false;
                 } else {
                     allChecked = false;
-                    uncheckedCount++;
                 }
             }
         } else if (item.type === 'subtask') {
@@ -700,15 +731,12 @@ function checkCompletionStatus(checkedItems, todos) {
     const markTextElement = document.getElementById("Mark-text");
     const markTextBtn = document.getElementById('markText-btn');
 
-    if (uncheckedCount === 1) {
-        markTextElement.textContent = "completed";
-        markTextBtn.textContent = "Mark Completed";
-    } else if (allChecked && !allUnchecked) {
+    if (allChecked && !allUnchecked) {
         markTextElement.textContent = "uncompleted";
         markTextBtn.textContent = "Mark Uncompleted";
     } else if (!allChecked && !allUnchecked) {
-        markTextElement.textContent = "completed/uncompleted";
-        markTextBtn.textContent = "Mark Comp/Uncomp";
+        markTextElement.textContent = "completed";
+        markTextBtn.textContent = "Mark Completed";
     } else if (allUnchecked && !allChecked) {
         markTextElement.textContent = "completed";
         markTextBtn.textContent = "Mark Completed";
@@ -869,6 +897,7 @@ document.getElementById('addTaskForm').addEventListener('submit', function (even
 
     saveToLocalStorage(todos);
     renderTodos();
+    checkedItems = [];
 
     this.reset();
     // Reset lại giá trị của priority
@@ -1176,6 +1205,7 @@ document.getElementById('SaveEdit-btn').addEventListener('click', function () {
 
     saveToLocalStorage(todos);
     renderTodos();
+    checkedItems = [];
 });
 
 
